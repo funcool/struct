@@ -1,0 +1,107 @@
+= struct - Structural validation library
+:toc: left
+:!numbered:
+:idseparator: -
+:idprefix:
+:sectlinks:
+:source-highlighter: pygments
+:pygments-style: friendly
+
+
+== Introduction
+
+A structural validation library for Clojure and ClojureScript.
+
+
+=== Project Maturity
+
+Since _struct_ is a young project there may be some API breakage.
+
+
+=== Install
+
+Just include that in your depencency vector on *_project.clj_*:
+
+[source,clojure]
+----
+[funcool/struct "0.1.0"]
+----
+
+== User guide
+
+TODO
+
+
+== Developers Guide
+
+=== Contributing
+
+Unlike Clojure and other Clojure contrib libs, does not have many restrictions for
+contributions. Just open a issue or pull request.
+
+
+=== Get the Code
+
+_struct_ is open source and can be found on
+link:https://github.com/funcool/struct[github].
+
+You can clone the public repository with this command:
+
+[source,text]
+----
+git clone https://github.com/funcool/struct
+----
+
+
+=== Run tests
+
+To run the tests execute the following:
+
+For the JVM platform:
+
+[source, text]
+----
+lein test
+----
+
+And for JS platform:
+
+[source, text]
+----
+./scripts/build
+node out/tests.js
+----
+
+You will need to have nodejs installed on your system.
+
+
+=== License
+
+_struct_ is under public domain:
+
+----
+This is free and unencumbered software released into the public domain.
+
+Anyone is free to copy, modify, publish, use, compile, sell, or
+distribute this software, either in source code form or as a compiled
+binary, for any purpose, commercial or non-commercial, and by any
+means.
+
+In jurisdictions that recognize copyright laws, the author or authors
+of this software dedicate any and all copyright interest in the
+software to the public domain. We make this dedication for the benefit
+of the public at large and to the detriment of our heirs and
+successors. We intend this dedication to be an overt act of
+relinquishment in perpetuity of all present and future rights to this
+software under copyright law.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+OTHER DEALINGS IN THE SOFTWARE.
+
+For more information, please refer to <http://unlicense.org/>
+----
