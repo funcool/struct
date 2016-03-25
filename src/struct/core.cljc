@@ -74,11 +74,12 @@
 
 (defn validate!
   ([data schema]
-   (validate! data schema "Schema validation."))
-  ([data schema message]
-   (if-let [[errors data] (validate data schema)]
-     (throw (ex-info message errors))
-     data)))
+   (validate! data schema nil))
+  ([data schema {:keys [message] :or {message "Schema validation error"}}]
+   (let [[errors data] (validate data schema)]
+     (if (seq errors)
+       (throw (ex-info message errors))
+       data))))
 
 (defn valid?
   [data schema]
