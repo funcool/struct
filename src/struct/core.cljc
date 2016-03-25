@@ -1,52 +1,57 @@
 (ns struct.core
-  (:refer-clojure :exclude [keyword uuid vector boolean]))
+  (:refer-clojure :exclude [keyword uuid vector boolean long]))
 
 ;; --- Impl details
 
-(defprotocol IValidator
-  (-validate [_ path value context]))
-
-(defn- call-coerce
-  [func value]
-  (if (nil? value)
-    value
+(defn- apply-coersion
+  [step value]
+  (if-let [coercefn (:coerce step identity)]
     (try
-      (func value)
+      (coercefn value)
       (catch #?(:cljs :default :clj Exception) e
-        value))))
+        value))
+    value))
 
-(defrecord Validator [optional message args validator coerce]
-  IValidator
-  (-validate [_ path value context]
-    (if (and (nil? value) optional)
-      context
-      (let [value (call-coerce coerce value)
-            [errors state] context]
-        (if (apply validator value args)
-          [errors (assoc-in state path value)]
+(defn- apply-validation
+  [step value]
+  (if-let [validationfn (:validate step nil)]
+    (let [args (:args step [])]
+      (apply validationfn value args))
+    true))
+
+(defn- run-step
+  [[errors data] step]
+  (let [path (:path step)
+        value (get-in data path)]
+    (if (and (nil? value) (:optional step))
+      [errors data]
+      (let [value (apply-coersion step value)
+            message (:message step "invalid")]
+        (if (apply-validation step value)
+          [errors (assoc-in data path value)]
           [(update-in errors path conj message)
-           (assoc-in state path value)])))))
+           (assoc-in data path value)])))))
 
-(defn- build-validator
-  [item]
+(defn- build-step
+  [key item]
   (if (vector? item)
     (let [validator (first item)
           result (split-with (complement keyword?) (rest item))
           args (first result)
           opts (apply hash-map (second result))]
-      (merge (assoc validator :args args)
+      (merge (assoc validator :args args :path [key])
              (select-keys opts [:coerce :message :optional])))
-    item))
+    (assoc item :args [] :path [key])))
 
-(defn- normalize-schema-entry
+(defn- normalize-step
   [acc key value]
   (if (vector? value)
-    (reduce #(conj %1 [[key] (build-validator %2)]) acc value)
-    (conj acc [[key] (build-validator value)])))
+    (reduce #(conj %1 (build-step key %2)) acc value)
+    (conj acc (build-step key value))))
 
 (defn- build-steps
   [schema]
-  (reduce-kv normalize-schema-entry [] schema))
+  (reduce-kv normalize-step [] schema))
 
 ;; --- Public Api
 
@@ -54,12 +59,7 @@
   [data schema]
   (let [steps (build-steps schema)
         seed [nil data]]
-    (reduce (fn [context [path v]]
-              (let [value (-> (second context)
-                              (get-in path))]
-                (-validate v path value context)))
-            seed
-            steps)))
+    (reduce run-step seed steps)))
 
 (defn validate!
   ([data schema]
@@ -69,77 +69,84 @@
      (throw (ex-info message errors))
      data)))
 
-(defn validator
-  "A helper for define a validator."
-  [& {:keys [message validator coerce optional]
-      :or {message "invalid" coerce identity optional true}}]
-  {:pre [(ifn? validator)]}
-  (map->Validator {:optional optional
-                   :message message
-                   :validator validator
-                   :coerce coerce
-                   :args []}))
+(defn valid?
+  [data schema]
+  (empty? (first (validate data schema))))
 
 ;; --- Validators
 
 (def keyword
-  (validator
-   :message "must be a keyword instance"
-   :validator keyword?
-   :coerce identity))
+  {:message "must be a keyword instance"
+   :optional true
+   :validate keyword?
+   :coerce identity})
 
 (def uuid
-  (validator
-   :message "must be a uuid instance"
-   :validator #?(:clj #(instance? java.util.UUID %)
-                 :cljs #(instance? cljs.core.UUID %))))
+  {:message "must be a uuid instance"
+   :optional true
+   :validate #?(:clj #(instance? java.util.UUID %)
+                :cljs #(instance? cljs.core.UUID %))})
 
 (def vector
-  (validator
-   :message "must be a vector instance"
-   :validator vector?))
+  {:message "must be a vector instance"
+   :optional true
+   :validate vector?})
 
 (def function
-  (validator
-   :message "must be a function"
-   :validator ifn?))
+  {:message "must be a function"
+   :optional true
+   :validate ifn?})
 
 (def ^:const ^:private +email-re+
   #"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$")
 
 (def email
-  (validator
-   :message "must be a valid email"
-   :validator #?(:clj #(clojure.core/boolean (re-seq +email-re+ %))
-                 :cljs #(cljs.core/boolean (re-seq +email-re+ %)))))
+  {:message "must be a valid email"
+   :optional true
+   :validate #?(:clj #(clojure.core/boolean (re-seq +email-re+ %))
+                 :cljs #(cljs.core/boolean (re-seq +email-re+ %)))})
 
 (def required
-  (validator
+  {:message "this field is mandatory"
    :optional false
-   :message "this field is mandatory"
-   :validator #(if (string? %)
+   :validate #(if (string? %)
                  (not (empty? %))
-                 (not (nil? %)))))
+                 (not (nil? %)))})
 
 (def number
-  (validator
-   :message "must be a number"
-   :validator number?))
+  {:message "must be a number"
+   :optional true
+   :validate number?})
 
 (def integer
-  (validator
-   :message "must be a integer"
-   :validator integer?))
+  {:message "must be a integer"
+   :optional true
+   :validate integer?})
+
+(def long
+  (letfn [(coerce [v]
+            (if (string? v)
+              #?(:clj (Long/parseLong v)
+                 :cljs (let [result (js/parseInt v 10)]
+                         (if (js/isNaN result) v result)))
+              v))
+          (validate [v]
+            #?(:clj (instance? Long v)
+               :cljs (js/Number.isInteger v)))]
+    {:message "must be a long"
+     :optional true
+     :validate validate
+     :coerce coerce}))
 
 (def boolean
-  (validator
-   :message "must be a boolean"
-   :validator #(or (= false %) (= true %))))
+  {:message "must be a boolean"
+   :optional true
+   :validate #(or (= false %) (= true %))})
 
 (def string
-  (validator
-   :message "must be a string"
-   :validator string?))
+  {:message "must be a string"
+   :optional true
+   :validate string?})
 
 
 
