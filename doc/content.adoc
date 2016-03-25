@@ -27,9 +27,141 @@ Just include that in your depencency vector on *_project.clj_*:
 [funcool/struct "0.1.0"]
 ----
 
+
 == User guide
 
-TODO
+=== Quick Start
+
+Let's require the main _struct_ namespace:
+
+[source, clojure]
+----
+(require '[struct.core :as st])
+----
+
+Define a small schema for the example purpose:
+
+[source, clojure]
+----
+(def +scheme+
+  {:name [st/required st/string]
+   :year [st/required st/number]})
+----
+
+You can observe that it consists in a simple map when you declare keys and
+corresponding validators for that key. A vector as value allows us to put
+more than one validator for the same key. If you have only one validator for the
+key, you can omit the vector and put it as single value.
+
+By default, all validators are optional so if the value is missing, no error
+will reported. If you want make the value mandatory, you should use a specific
+`required` validator.
+
+And finally, start validating your data:
+
+[source, clojure]
+----
+(-> {:name "Blood of Elves" :year 1994}
+    (st/validate +scheme+))
+;; => [nil {:name "Blood of Elves" :year 1994}]
+
+(-> {:name "Blood of Elves" :year "1994"}
+    (st/validate +scheme+))
+;; => [{:year ("must be a number")} {:name "Blood of Elves", :year "1994"}]
+
+(-> {:year "1994"}
+    (st/validate +scheme+))
+;; => [{:name ("this field is mandatory"), :year ("must be a number")} {}]
+----
+
+If only want to know if some data is valid or not, you can use the `valid?` predicate
+for that purpose:
+
+[source, clojure]
+----
+(st/valid? {:year "1994"} +scheme+)
+;; => false
+----
+
+
+=== Parametrized validators
+
+Additionally to simple validators, other may require additional parameters
+(e.g. `in-range`). This is how them can be passed to the validator:
+
+[source, clojure]
+----
+(def schema {:num [[st/in-range 10 20]]})
+
+(st/validate {:num 21} schema)
+;; => [{:num ("not in range")} {}]
+
+(st/validate {:num 19} schema)
+;; => [nil {:num 19}]
+----
+
+Note the double vector, the outer denotes a list of validatiors and the inner
+denotes a validator with patameters.
+
+
+=== Custom messages
+
+The builtin validators comes with default messages in human readable format, but
+sometimes you may want to change them (e.g. for i18n purposes). This is how you
+can do it:
+
+[source, clojure]
+----
+(def schema
+  {:num [[st/in-range 10 20 :message "errors.not-in-range"]]})
+
+(st/validate {:num 21} schema)
+;; => [{:num ("errors.not-in-range")} {}]
+----
+
+=== Data coersions
+
+Additionally to simple validation process, this library includes the facility
+for coerce values and a collection of validators that matches over strings. Let
+see some code:
+
+.Example attaching custom coersions
+[source, clojure]
+----
+(def schema
+  {:year [[st/integer :coerce str]]})
+
+(st/validate {:year 1994} schema))
+;; => [nil {:year "1994"}]
+----
+
+From previous example, you can see that the data returned from the validation
+process, the value is properly coerced with the specified coersion function.
+
+Furthermore, this library comes with a collection of validators that already
+has attached coersion function, and them serves just for validate paraeters
+that comes in string format and convert later to the appropriate type:
+
+[source, clojure]
+----
+(def schema {:year [st/required st/integer-like]
+             :id [st/required st/uuid-like]})
+
+(st/validate {:year "1994"
+              :id "543e7472-6624-4cb5-b65e-f3c341843d0f"}
+             schema)
+;; => [nil {:year 1994, :id #uuid "543e7472-6624-4cb5-b65e-f3c341843d0f"}]
+----
+
+For facilitate this operation, it there `validate!` function that receives the
+data and scheme and returns the resulting data. If data not matches the schema
+an exception will be raised using `ex-info` clojure facility:
+
+[source, clojure]
+----
+(st/validate! {:year "1994" :id "543e7472-6624-4cb5-b65e-f3c341843d0f"} schema)
+;; => {:year 1994, :id #uuid "543e7472-6624-4cb5-b65e-f3c341843d0f"}
+----
 
 
 == Developers Guide
