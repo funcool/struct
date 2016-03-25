@@ -2,13 +2,8 @@
   (:require #?(:cljs [cljs.test :as t]
                :clj [clojure.test :as t])
             [struct.core :as st]))
-;; --- Tests
 
-;; (defn parse-long
-;;   [v]
-;;   #?(:clj (Long/parseLong v)
-;;      :cljs (let [result (js/parseInt v 10)]
-;;              (if (js/isNaN result) v result))))
+;; --- Tests
 
 (t/deftest test-optional-validators
   (let [scheme {:max st/number
