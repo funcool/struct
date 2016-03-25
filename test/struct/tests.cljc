@@ -4,11 +4,11 @@
             [struct.core :as st]))
 ;; --- Tests
 
-(defn parse-long
-  [v]
-  #?(:clj (Long/parseLong v)
-     :cljs (let [result (js/parseInt v 10)]
-             (if (js/isNaN result) v result))))
+;; (defn parse-long
+;;   [v]
+;;   #?(:clj (Long/parseLong v)
+;;      :cljs (let [result (js/parseInt v 10)]
+;;              (if (js/isNaN result) v result))))
 
 (t/deftest test-optional-validators
   (let [scheme {:max st/number
@@ -34,15 +34,23 @@
         errors {:max '("this field is mandatory")}
         result (st/validate input scheme)]
     (t/is (= errors (first result)))
-    (t/is (= {:scope "foobar" :max nil} (second result)))))
+    (t/is (= {:scope "foobar"} (second result)))))
 
 (t/deftest test-validation-with-coersion
-  (let [scheme {:max [[st/number :coerce parse-long]]
+  (let [scheme {:max [[st/number-like]]
                 :scope st/string}
         input {:max "2" :scope "foobar"}
         result (st/validate input scheme)]
     (t/is (= nil (first result)))
     (t/is (= {:max 2 :scope "foobar"} (second result)))))
+
+(t/deftest test-validation-with-custom-coersion
+  (let [scheme {:max [[st/number-like :coerce (constantly :foo)]]
+                :scope st/string}
+        input {:max "2" :scope "foobar"}
+        result (st/validate input scheme)]
+    (t/is (= nil (first result)))
+    (t/is (= {:max :foo :scope "foobar"} (second result)))))
 
 ;; --- Entry point
 

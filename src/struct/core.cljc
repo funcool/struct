@@ -25,12 +25,11 @@
         value (get-in data path)]
     (if (and (nil? value) (:optional step))
       [errors data]
-      (let [value (apply-coersion step value)
-            message (:message step "invalid")]
+      (let [message (:message step "invalid")]
         (if (apply-validation step value)
-          [errors (assoc-in data path value)]
-          [(update-in errors path conj message)
-           (assoc-in data path value)])))))
+          (let [value (apply-coersion step value)]
+            [errors (assoc-in data path value)])
+          [(update-in errors path conj message) data])))))
 
 (defn- build-step
   [key item]
@@ -82,10 +81,21 @@
    :coerce identity})
 
 (def uuid
-  {:message "must be a uuid instance"
+  {:message "must be an uuid instance"
    :optional true
    :validate #?(:clj #(instance? java.util.UUID %)
                 :cljs #(instance? cljs.core.UUID %))})
+
+(def ^:const ^:private +uuid-re+
+  #"^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$")
+
+(def uuid-like
+  {:message "must be an uuid"
+   :optional true
+   :validate #(and (string? %)
+                   (re-seq +uuid-re+ %))
+   :coerce #?(:clj #(java.util.UUID/fromString %)
+              :cljs #(uuid %))})
 
 (def vector
   {:message "must be a vector instance"
@@ -97,14 +107,12 @@
    :optional true
    :validate ifn?})
 
-(def ^:const ^:private +email-re+
-  #"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$")
-
 (def email
-  {:message "must be a valid email"
-   :optional true
-   :validate #?(:clj #(clojure.core/boolean (re-seq +email-re+ %))
-                 :cljs #(cljs.core/boolean (re-seq +email-re+ %)))})
+  (let [rx #"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"]
+    {:message "must be a valid email"
+     :optional true
+     :validate #(and (string? %)
+                     (re-seq rx %))}))
 
 (def required
   {:message "this field is mandatory"
@@ -118,21 +126,30 @@
    :optional true
    :validate number?})
 
-(def integer
-  {:message "must be a integer"
+(def number-like
+  {:message "must be a number"
    :optional true
-   :validate integer?})
+   :validate #(and (string? %)
+                   (re-seq #"^[-+]?[0-9]*\.?[0-9]+$" %))
+   :coerce #?(:cljs #(js/parseFloat %)
+              :clj #(Double/parseDouble %))})
 
-(def long
+(def integer
+  (letfn [(validate [v]
+            #?(:cljs (js/Number.isInteger v)
+               :clj (integer? v)))]
+    {:message "must be a integer"
+     :optional true
+     :validate validate}))
+
+(def integer-like
   (letfn [(coerce [v]
-            (if (string? v)
-              #?(:clj (Long/parseLong v)
-                 :cljs (let [result (js/parseInt v 10)]
-                         (if (js/isNaN result) v result)))
-              v))
+            #?(:clj (Long/parseLong v)
+               :cljs (let [result (js/parseInt v 10)]
+                       (if (js/isNaN result) v result))))
           (validate [v]
-            #?(:clj (instance? Long v)
-               :cljs (js/Number.isInteger v)))]
+            (and (string? v)
+                 (re-seq #"^[-+]?\d+$" v)))]
     {:message "must be a long"
      :optional true
      :validate validate
@@ -143,10 +160,26 @@
    :optional true
    :validate #(or (= false %) (= true %))})
 
+(def boolean-like
+  (letfn [(validate [v]
+            (and (string? v)
+                 (re-seq #"^(?:t|true|false|f|0|1)$" v)))
+          (coerce [v]
+            (contains? #{"t" "true" "1"} v))]
+    {:message "must be a boolean"
+     :optional true
+     :validate validate
+     :coerce coerce}))
+
 (def string
   {:message "must be a string"
    :optional true
    :validate string?})
+
+(def string-like
+  {:message "must be a string"
+   :optional true
+   :coerce str})
 
 
 
