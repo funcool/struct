@@ -194,5 +194,11 @@
    :optional true
    :coerce str})
 
-
-
+(def in-range
+  (letfn [(validate [v from to]
+            {:pre [(number? from) (number? to)]}
+            (and (number? v)
+                 (<= from v to)))]
+    {:message "not in range"
+     :optional true
+     :validate validate}))
