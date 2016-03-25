@@ -19,6 +19,17 @@
       (apply validationfn value args))
     true))
 
+(defn dissoc-in
+  [m [k & ks :as keys]]
+  (if ks
+    (if-let [nextmap (get m k)]
+      (let [newmap (dissoc-in nextmap ks)]
+        (if (seq newmap)
+          (assoc m k newmap)
+          (dissoc m k)))
+      m)
+    (dissoc m k)))
+
 (defn- run-step
   [[errors data] step]
   (let [path (:path step)
@@ -29,7 +40,8 @@
         (if (apply-validation step value)
           (let [value (apply-coersion step value)]
             [errors (assoc-in data path value)])
-          [(update-in errors path conj message) data])))))
+          [(update-in errors path conj message)
+           (dissoc-in data path)])))))
 
 (defn- build-step
   [key item]
