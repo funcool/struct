@@ -16,10 +16,12 @@
     value))
 
 (defn- apply-validation
-  [step value]
-  (if-let [validationfn (:validate step nil)]
+  [step data value]
+  (if-let [validate (:validate step nil)]
     (let [args (:args step [])]
-      (apply validationfn value args))
+      (if (:state step)
+        (apply validate data value args)
+        (apply validate value args)))
     true))
 
 (defn- dissoc-in
@@ -40,7 +42,7 @@
     (if (and (nil? value) (:optional step))
       [errors data]
       (let [message (:message step "invalid")]
-        (if (apply-validation step value)
+        (if (apply-validation step data value)
           (let [[err value] (apply-coersion step value)]
             (if err
               [(update-in errors path conj message)
@@ -49,11 +51,13 @@
           [(update-in errors path conj message)
            (dissoc-in data path)])))))
 
+(def opts-keywords #{:coerce :message :optional})
+
 (defn- build-step
   [key item]
   (if (vector? item)
     (let [validator (first item)
-          result (split-with (complement keyword?) (rest item))
+          result (split-with (complement opts-keywords) (rest item))
           args (first result)
           opts (apply hash-map (second result))]
       (merge (assoc validator :args args :path [key])
@@ -267,3 +271,10 @@
    :optional true
    :validate ifn?})
 
+(def identical-to
+  {:message "does not match"
+   :optional true
+   :state true
+   :validate (fn [state v ref]
+               (let [prev (get state ref)]
+                 (= prev v)))})

@@ -31,6 +31,26 @@
     (t/is (= errors (first result)))
     (t/is (= {:scope "foobar"} (second result)))))
 
+(t/deftest test-dependent-validators-1
+  (let [scheme [[:password1 st/string]
+                [:password2 [st/identical-to :password1]]]
+        input {:password1 "foobar"
+               :password2 "foobar."}
+        errors {:password2 '("does not match")}
+        result (st/validate input scheme)]
+    (t/is (= errors (first result)))
+    (t/is (= {:password1 "foobar"} (second result)))))
+
+(t/deftest test-dependent-validators-2
+  (let [scheme [[:password1 st/string]
+                [:password2 [st/identical-to :password1]]]
+        input {:password1 "foobar"
+               :password2 "foobar"}
+        result (st/validate input scheme)]
+    (t/is (= nil (first result)))
+    (t/is (= {:password1 "foobar"
+              :password2 "foobar"} (second result)))))
+
 (t/deftest test-multiple-validators
   (let [scheme {:max [st/required st/number]
                 :scope st/string}
@@ -55,6 +75,15 @@
         result (st/validate input scheme)]
     (t/is (= nil (first result)))
     (t/is (= {:max :foo :scope "foobar"} (second result)))))
+
+(t/deftest test-validation-with-custom-message
+  (let [scheme {:max [[st/number-str :message "custom msg"]]
+                :scope st/string}
+        input {:max "g" :scope "foobar"}
+        errors {:max '("custom msg")}
+        result (st/validate input scheme)]
+    (t/is (= errors (first result)))
+    (t/is (= {:scope "foobar"} (second result)))))
 
 ;; --- Entry point
 
