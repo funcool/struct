@@ -12,6 +12,11 @@
 
 A structural validation library for Clojure and ClojureScript.
 
+Is highly based on the ideas from
+link:https://github.com/leonardoborges/bouncer[bouncer]
+but with simplified implementantion, builtin coersion support and no macros usage
+(validators are simple dicts).
+
 
 === Project Maturity
 
@@ -81,6 +86,20 @@ for that purpose:
 ----
 (st/valid? {:year "1994"} +scheme+)
 ;; => false
+----
+
+The additional entries in the map will be striped by default, but this
+can be turned off passing an additional flag as third argument:
+
+[source, clojure]
+----
+(-> {:name "Blood of Elves" :year 1994 :foo "bar"}
+    (st/validate +scheme+))
+;; => [nil {:name "Blood of Elves" :year 1994}]
+
+(-> {:name "Blood of Elves" :year 1994 :foo "bar"}
+    (st/validate +scheme+ {:strip false}))
+;; => [nil {:name "Blood of Elves" :year 1994 :foo "bar"}]
 ----
 
 
@@ -162,6 +181,45 @@ an exception will be raised using `ex-info` clojure facility:
 (st/validate! {:year "1994" :id "543e7472-6624-4cb5-b65e-f3c341843d0f"} schema)
 ;; => {:year 1994, :id #uuid "543e7472-6624-4cb5-b65e-f3c341843d0f"}
 ----
+
+=== Builtin Validators
+
+This is the table with available builtin validators:
+
+.Builtin Validators
+[options="header", cols="2,1,4"]
+|===========================================================================
+| Identifier                | Coersion | Description
+| `struct.core/keyword`     | no       | Validator for clojure's keyword
+| `struct.core/uuid`        | no       | Validator for UUID's
+| `struct.core/uuid-str`    | yes      | Validator for uuid strings with coersion to UUID
+| `struct.core/email`       | no       | Validator for email string.
+| `struct.core/required`    | no       | Marks field as required.
+| `struct.core/number`      | no       | Validator for Number.
+| `struct.core/number-str`  | yes      | Validator for number string.
+| `struct.core/integer`     | no       | Validator for integer.
+| `struct.core/integer-str` | yes      | Validator for integer string.
+| `struct.core/boolean`     | no       | Validator for boolean.
+| `struct.core/boolean-str` | yes      | Validator for boolean string.
+| `struct.core/string`      | no       | Validator for string.
+| `struct.core/string-like` | yes      | Validator for string like.
+| `struct.core/in-range`    | no       | Validator for a number range.
+| `struct.core/member`      | no       | Validator for check if a value is member of coll.
+| `struct.core/positive`    | no       | Validator for positive number.
+| `struct.core/negative`    | no       | Validator for negative number.
+| `struct.core/function`    | no       | Validator for IFn interface.
+| `struct.core/vector`      | no       | Validator for clojure vector.
+| `struct.core/map`         | no       | Validator for clojure map.
+| `struct.core/set`         | no       | Validator for clojure set.
+| `struct.core/coll`        | no       | Validator for clojure coll.
+| `struct.core/every`       | no       | Validator for check if pred match for every item in coll.
+|===========================================================================
+
+Additional notes:
+
+* `number-str` coerces to `java.lang.Double` or `float` (cljs)
+* `boolean-str` coerces to `true` (`"t"`, `"true"`, `"1"`) or `false` (`"f"`, `"false"`, `"0"`).
+* `string-like` coerces anything to string using `str` function.
 
 
 == Developers Guide
