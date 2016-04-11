@@ -117,13 +117,13 @@
 ;; --- Validators
 
 (def keyword
-  {:message "must be a keyword instance"
+  {:message "must be a keyword"
    :optional true
    :validate keyword?
    :coerce identity})
 
 (def uuid
-  {:message "must be an uuid instance"
+  {:message "must be an uuid"
    :optional true
    :validate #?(:clj #(instance? java.util.UUID %)
                 :cljs #(instance? cljs.core.UUID %))})
@@ -131,23 +131,13 @@
 (def ^:const ^:private +uuid-re+
   #"^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$")
 
-(def uuid-like
+(def uuid-str
   {:message "must be an uuid"
    :optional true
    :validate #(and (string? %)
                    (re-seq +uuid-re+ %))
    :coerce #?(:clj #(java.util.UUID/fromString %)
               :cljs #(uuid %))})
-
-(def vector
-  {:message "must be a vector instance"
-   :optional true
-   :validate vector?})
-
-(def function
-  {:message "must be a function"
-   :optional true
-   :validate ifn?})
 
 (def email
   (let [rx #"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"]
@@ -168,7 +158,7 @@
    :optional true
    :validate number?})
 
-(def number-like
+(def number-str
   {:message "must be a number"
    :optional true
    :validate #(and (string? %)
@@ -184,7 +174,7 @@
      :optional true
      :validate validate}))
 
-(def integer-like
+(def integer-str
   (letfn [(coerce [v]
             #?(:clj (Long/parseLong v)
                :cljs (let [result (js/parseInt v 10)]
@@ -202,7 +192,7 @@
    :optional true
    :validate #(or (= false %) (= true %))})
 
-(def boolean-like
+(def boolean-str
   (letfn [(validate [v]
             (and (string? v)
                  (re-seq #"^(?:t|true|false|f|0|1)$" v)))
@@ -231,3 +221,49 @@
     {:message "not in range"
      :optional true
      :validate validate}))
+
+(def positive
+  {:message "must be positive"
+   :optional true
+   :validate pos?})
+
+(def negative
+  {:message "must be negative"
+   :optional true
+   :validate neg?})
+
+(def map
+  {:message "must be a map"
+   :optional true
+   :validate map?})
+
+(def set
+  {:message "must be a set"
+   :optional true
+   :validate set?})
+
+(def coll
+  {:message "must be a collection"
+   :optional true
+   :validate coll?})
+
+(def vector
+  {:message "must be a vector instance"
+   :optional true
+   :validate vector?})
+
+(def every
+  {:message "must match the predicate"
+   :optional true
+   :validato #(every? %2 %1)})
+
+(def member
+  {:message "not in coll"
+   :optional true
+   :validate #(some #{%1} %2)})
+
+(def function
+  {:message "must be a function"
+   :optional true
+   :validate ifn?})
+
