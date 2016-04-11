@@ -3,13 +3,16 @@
 
 ;; --- Impl details
 
+(def ^:private map' #?(:cljs cljs.core/map
+                       :clj clojure.core/map))
+
 (defn- apply-coersion
   [step value]
   (if-let [coercefn (:coerce step identity)]
     (try
-      (coercefn value)
+      [nil (coercefn value)]
       (catch #?(:cljs :default :clj Exception) e
-        value))
+        [e value]))
     value))
 
 (defn- apply-validation
@@ -19,7 +22,7 @@
       (apply validationfn value args))
     true))
 
-(defn dissoc-in
+(defn- dissoc-in
   [m [k & ks :as keys]]
   (if ks
     (if-let [nextmap (get m k)]
@@ -38,8 +41,11 @@
       [errors data]
       (let [message (:message step "invalid")]
         (if (apply-validation step value)
-          (let [value (apply-coersion step value)]
-            [errors (assoc-in data path value)])
+          (let [[err value] (apply-coersion step value)]
+            (if err
+              [(update-in errors path conj message)
+               (dissoc-in data path)]
+              [errors (assoc-in data path value)]))
           [(update-in errors path conj message)
            (dissoc-in data path)])))))
 
@@ -54,29 +60,52 @@
              (select-keys opts [:coerce :message :optional])))
     (assoc item :args [] :path [key])))
 
-(defn- normalize-step
+(defn- normalize-step-map-entry
   [acc key value]
   (if (vector? value)
     (reduce #(conj %1 (build-step key %2)) acc value)
     (conj acc (build-step key value))))
 
+(defn- normalize-step-entry
+  [acc [key & values]]
+  (reduce #(conj %1 (build-step key %2)) acc values))
+
 (defn- build-steps
   [schema]
-  (reduce-kv normalize-step [] schema))
+  (cond
+    (vector? schema)
+    (reduce normalize-step-entry [] schema)
+
+    (map? schema)
+    (reduce-kv normalize-step-map-entry [] schema)
+
+    :else
+    (throw (ex-info "Invalid schema." {}))))
+
+(defn- strip-values
+  [data steps]
+  (reduce (fn [acc path]
+            (if-let [value (get-in data path)]
+              (assoc-in acc path value)
+              acc))
+          {}
+          (into #{} (map' :path steps))))
 
 ;; --- Public Api
 
 (defn validate
-  [data schema]
-  (let [steps (build-steps schema)
-        seed [nil data]]
-    (reduce run-step seed steps)))
+  ([data schema] (validate data schema nil))
+  ([data schema {:keys [strip] :or {strip true}}]
+   (let [steps (build-steps schema)
+         data  (if strip (strip-values data steps) data)
+         seed [nil data]]
+     (reduce run-step seed steps))))
 
 (defn validate!
   ([data schema]
    (validate! data schema nil))
-  ([data schema {:keys [message] :or {message "Schema validation error"}}]
-   (let [[errors data] (validate data schema)]
+  ([data schema {:keys [message] :or {message "Schema validation error"} :as opts}]
+   (let [[errors data] (validate data schema opts)]
      (if (seq errors)
        (throw (ex-info message errors))
        data))))
