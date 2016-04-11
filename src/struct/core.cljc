@@ -1,5 +1,5 @@
 (ns struct.core
-  (:refer-clojure :exclude [keyword uuid vector boolean long]))
+  (:refer-clojure :exclude [keyword uuid vector boolean long map set]))
 
 ;; --- Impl details
 
