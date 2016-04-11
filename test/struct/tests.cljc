@@ -31,6 +31,15 @@
     (t/is (= errors (first result)))
     (t/is (= {:scope "foobar"} (second result)))))
 
+(t/deftest test-simple-validators-with-translate
+  (let [scheme [[:max st/number]
+                [:scope st/string]]
+        input {:scope "foobar" :max "d"}
+        errors {:max '("a")}
+        result (st/validate input scheme {:translate (constantly "a")})]
+    (t/is (= errors (first result)))
+    (t/is (= {:scope "foobar"} (second result)))))
+
 (t/deftest test-dependent-validators-1
   (let [scheme [[:password1 st/string]
                 [:password2 [st/identical-to :password1]]]
