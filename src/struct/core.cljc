@@ -37,12 +37,14 @@
     (dissoc m k)))
 
 (defn- run-step
-  [[errors data] step]
+  [opts [errors data] step]
   (let [path (:path step)
-        value (get-in data path)]
+        value (get-in data path)
+        translate (:translate opts identity)]
     (if (and (nil? value) (:optional step))
       [errors data]
       (let [message (as-> (:message step "errors.invalid") $
+                      (translate $)
                       (apply str/format $ (:args step)))]
         (if (apply-validation step data value)
           (let [[err value] (apply-coersion step value)]
@@ -101,11 +103,13 @@
 
 (defn validate
   ([data schema] (validate data schema nil))
-  ([data schema {:keys [strip] :or {strip true}}]
+  ([data schema {:keys [strip]
+                 :or {strip true}
+                 :as opts}]
    (let [steps (build-steps schema)
          data  (if strip (strip-values data steps) data)
          seed [nil data]]
-     (reduce run-step seed steps))))
+     (reduce (partial run-step opts) seed steps))))
 
 (defn validate!
   ([data schema]
