@@ -20,7 +20,16 @@
         errors {:max '("must be a number")}
         result (st/validate input scheme)]
     (t/is (= errors (first result)))
-    (t/is (= input (second result)))))
+    (t/is (= {:scope "foobar"} (second result)))))
+
+(t/deftest test-simple-validators-with-vector-schema
+  (let [scheme [[:max st/number]
+                [:scope st/string]]
+        input {:scope "foobar" :max "d"}
+        errors {:max '("must be a number")}
+        result (st/validate input scheme)]
+    (t/is (= errors (first result)))
+    (t/is (= {:scope "foobar"} (second result)))))
 
 (t/deftest test-multiple-validators
   (let [scheme {:max [st/required st/number]
@@ -32,7 +41,7 @@
     (t/is (= {:scope "foobar"} (second result)))))
 
 (t/deftest test-validation-with-coersion
-  (let [scheme {:max [[st/number-like]]
+  (let [scheme {:max st/number-str
                 :scope st/string}
         input {:max "2" :scope "foobar"}
         result (st/validate input scheme)]
@@ -40,7 +49,7 @@
     (t/is (= {:max 2 :scope "foobar"} (second result)))))
 
 (t/deftest test-validation-with-custom-coersion
-  (let [scheme {:max [[st/number-like :coerce (constantly :foo)]]
+  (let [scheme {:max [[st/number-str :coerce (constantly :foo)]]
                 :scope st/string}
         input {:max "2" :scope "foobar"}
         result (st/validate input scheme)]
