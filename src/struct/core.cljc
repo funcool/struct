@@ -1,5 +1,6 @@
 (ns struct.core
-  (:refer-clojure :exclude [keyword uuid vector boolean long map set]))
+  (:refer-clojure :exclude [keyword uuid vector boolean long map set])
+  (:require [cuerdas.core :as str]))
 
 ;; --- Impl details
 
@@ -41,7 +42,8 @@
         value (get-in data path)]
     (if (and (nil? value) (:optional step))
       [errors data]
-      (let [message (:message step "invalid")]
+      (let [message (as-> (:message step "errors.invalid") $
+                      (apply str/format $ (:args step)))]
         (if (apply-validation step data value)
           (let [[err value] (apply-coersion step value)]
             (if err
