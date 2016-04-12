@@ -70,7 +70,7 @@
     (t/is (= {:scope "foobar"} (second result)))))
 
 (t/deftest test-validation-with-coersion
-  (let [scheme {:max st/number-str
+  (let [scheme {:max st/integer-str
                 :scope st/string}
         input {:max "2" :scope "foobar"}
         result (st/validate input scheme)]
