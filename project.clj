@@ -4,7 +4,7 @@
   :license {:name "Public Domain" :url "http://unlicense.org/"}
   :dependencies [[org.clojure/clojure "1.8.0" :scope "provided"]
                  [org.clojure/clojurescript "1.8.40" :scope "provided"]
-                 [funcool/cuerdas "0.7.1"]]
+                 [funcool/cuerdas "0.7.2"]]
   :source-paths ["src"]
   :test-paths ["test"]
   :codeina {:sources ["src"]
