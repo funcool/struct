@@ -12,10 +12,15 @@
 
 A structural validation library for Clojure and ClojureScript.
 
-Is highly based on the ideas from
-link:https://github.com/leonardoborges/bouncer[bouncer]
-but with simplified implementantion, builtin coersion support and no macros usage
-(validators are simple dicts).
+But with this differences:
+
+- *No macros*: validators are defined using plain data.
+- *Dependent validators*: the ability to access to already validated data.
+- *Coersion*: the ability to coerce incoming values to other types.
+- *No exceptions*: no exceptions used in the validation process.
+
+Based on similar ideas of
+link:https://github.com/leonardoborges/bouncer[bouncer].
 
 
 === Project Maturity
@@ -57,6 +62,13 @@ You can observe that it consists in a simple map when you declare keys and
 corresponding validators for that key. A vector as value allows us to put
 more than one validator for the same key. If you have only one validator for the
 key, you can omit the vector and put it as single value.
+
+The same schema can be defined using vectors, if the order of validation
+matters:
+
+(def +scheme+
+  [[:name [st/required st/string]]
+   [:year [st/required st/number]]])
 
 By default, all validators are optional so if the value is missing, no error
 will reported. If you want make the value mandatory, you should use a specific
@@ -138,6 +150,7 @@ can do it:
 ;; => [{:num ("errors.not-in-range")} {}]
 ----
 
+
 === Data coersions
 
 Additionally to simple validation process, this library includes the facility
@@ -163,8 +176,8 @@ that comes in string format and convert later to the appropriate type:
 
 [source, clojure]
 ----
-(def schema {:year [st/required st/integer-like]
-             :id [st/required st/uuid-like]})
+(def schema {:year [st/required st/integer-str]
+             :id [st/required st/uuid-str]})
 
 (st/validate {:year "1994"
               :id "543e7472-6624-4cb5-b65e-f3c341843d0f"}
@@ -202,7 +215,7 @@ This is the table with available builtin validators:
 | `struct.core/boolean`     | no       | Validator for boolean.
 | `struct.core/boolean-str` | yes      | Validator for boolean string.
 | `struct.core/string`      | no       | Validator for string.
-| `struct.core/string-like` | yes      | Validator for string like.
+| `struct.core/string-str`  | yes      | Validator for string like.
 | `struct.core/in-range`    | no       | Validator for a number range.
 | `struct.core/member`      | no       | Validator for check if a value is member of coll.
 | `struct.core/positive`    | no       | Validator for positive number.
@@ -213,13 +226,45 @@ This is the table with available builtin validators:
 | `struct.core/set`         | no       | Validator for clojure set.
 | `struct.core/coll`        | no       | Validator for clojure coll.
 | `struct.core/every`       | no       | Validator for check if pred match for every item in coll.
+| `struct.core/identical-to | no       | Validator for check that value is identical to other field.
 |===========================================================================
 
 Additional notes:
 
 * `number-str` coerces to `java.lang.Double` or `float` (cljs)
 * `boolean-str` coerces to `true` (`"t"`, `"true"`, `"1"`) or `false` (`"f"`, `"false"`, `"0"`).
-* `string-like` coerces anything to string using `str` function.
+* `string-str` coerces anything to string using `str` function.
+
+
+=== Define own validator
+
+As is mentioned previously, the validators in _struct_ library are defined using plain
+hash-maps. As example, this is how the builtin `integer` validator is defined:
+
+[source, clojure]
+----
+(def integer
+  {:message "must be a integer"
+   :optional true
+   :validate integer?}))
+----
+
+If the validator needs access to the previous already validated data, the `:state` key
+should be present with `true` as value. Let see the `identical-to` validator as example:
+
+[source,clojure]
+----
+(def identical-to
+  {:message "does not match"
+   :optional true
+   :state true
+   :validate (fn [state v ref]
+               (let [prev (get state ref)]
+                 (= prev v)))})
+----
+
+Validators that acces to the state, receives an other argument with the state to validator
+function.
 
 
 == Developers Guide
