@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 1.5.4">
+<title>struct - Structural validation library</title>
+<style>
+.listingblock .pygments .hll { background-color: #ffffcc }
+.listingblock .pygments  { background: #f0f0f0; }
+.listingblock .pygments .tok-c { color: #60a0b0; font-style: italic } /* Comment */
+.listingblock .pygments .tok-err { border: 1px solid #FF0000 } /* Error */
+.listingblock .pygments .tok-k { color: #007020; font-weight: bold } /* Keyword */
+.listingblock .pygments .tok-o { color: #666666 } /* Operator */
+.listingblock .pygments .tok-cm { color: #60a0b0; font-style: italic } /* Comment.Multiline */
+.listingblock .pygments .tok-cp { color: #007020 } /* Comment.Preproc */
+.listingblock .pygments .tok-c1 { color: #60a0b0; font-style: italic } /* Comment.Single */
+.listingblock .pygments .tok-cs { color: #60a0b0; background-color: #fff0f0 } /* Comment.Special */
+.listingblock .pygments .tok-gd { color: #A00000 } /* Generic.Deleted */
+.listingblock .pygments .tok-ge { font-style: italic } /* Generic.Emph */
+.listingblock .pygments .tok-gr { color: #FF0000 } /* Generic.Error */
+.listingblock .pygments .tok-gh { color: #000080; font-weight: bold } /* Generic.Heading */
+.listingblock .pygments .tok-gi { color: #00A000 } /* Generic.Inserted */
+.listingblock .pygments .tok-go { color: #888888 } /* Generic.Output */
+.listingblock .pygments .tok-gp { color: #c65d09; font-weight: bold } /* Generic.Prompt */
+.listingblock .pygments .tok-gs { font-weight: bold } /* Generic.Strong */
+.listingblock .pygments .tok-gu { color: #800080; font-weight: bold } /* Generic.Subheading */
+.listingblock .pygments .tok-gt { color: #0044DD } /* Generic.Traceback */
+.listingblock .pygments .tok-kc { color: #007020; font-weight: bold } /* Keyword.Constant */
+.listingblock .pygments .tok-kd { color: #007020; font-weight: bold } /* Keyword.Declaration */
+.listingblock .pygments .tok-kn { color: #007020; font-weight: bold } /* Keyword.Namespace */
+.listingblock .pygments .tok-kp { color: #007020 } /* Keyword.Pseudo */
+.listingblock .pygments .tok-kr { color: #007020; font-weight: bold } /* Keyword.Reserved */
+.listingblock .pygments .tok-kt { color: #902000 } /* Keyword.Type */
+.listingblock .pygments .tok-m { color: #40a070 } /* Literal.Number */
+.listingblock .pygments .tok-s { color: #4070a0 } /* Literal.String */
+.listingblock .pygments .tok-na { color: #4070a0 } /* Name.Attribute */
+.listingblock .pygments .tok-nb { color: #007020 } /* Name.Builtin */
+.listingblock .pygments .tok-nc { color: #0e84b5; font-weight: bold } /* Name.Class */
+.listingblock .pygments .tok-no { color: #60add5 } /* Name.Constant */
+.listingblock .pygments .tok-nd { color: #555555; font-weight: bold } /* Name.Decorator */
+.listingblock .pygments .tok-ni { color: #d55537; font-weight: bold } /* Name.Entity */
+.listingblock .pygments .tok-ne { color: #007020 } /* Name.Exception */
+.listingblock .pygments .tok-nf { color: #06287e } /* Name.Function */
+.listingblock .pygments .tok-nl { color: #002070; font-weight: bold } /* Name.Label */
+.listingblock .pygments .tok-nn { color: #0e84b5; font-weight: bold } /* Name.Namespace */
+.listingblock .pygments .tok-nt { color: #062873; font-weight: bold } /* Name.Tag */
+.listingblock .pygments .tok-nv { color: #bb60d5 } /* Name.Variable */
+.listingblock .pygments .tok-ow { color: #007020; font-weight: bold } /* Operator.Word */
+.listingblock .pygments .tok-w { color: #bbbbbb } /* Text.Whitespace */
+.listingblock .pygments .tok-mb { color: #40a070 } /* Literal.Number.Bin */
+.listingblock .pygments .tok-mf { color: #40a070 } /* Literal.Number.Float */
+.listingblock .pygments .tok-mh { color: #40a070 } /* Literal.Number.Hex */
+.listingblock .pygments .tok-mi { color: #40a070 } /* Literal.Number.Integer */
+.listingblock .pygments .tok-mo { color: #40a070 } /* Literal.Number.Oct */
+.listingblock .pygments .tok-sb { color: #4070a0 } /* Literal.String.Backtick */
+.listingblock .pygments .tok-sc { color: #4070a0 } /* Literal.String.Char */
+.listingblock .pygments .tok-sd { color: #4070a0; font-style: italic } /* Literal.String.Doc */
+.listingblock .pygments .tok-s2 { color: #4070a0 } /* Literal.String.Double */
+.listingblock .pygments .tok-se { color: #4070a0; font-weight: bold } /* Literal.String.Escape */
+.listingblock .pygments .tok-sh { color: #4070a0 } /* Literal.String.Heredoc */
+.listingblock .pygments .tok-si { color: #70a0d0; font-style: italic } /* Literal.String.Interpol */
+.listingblock .pygments .tok-sx { color: #c65d09 } /* Literal.String.Other */
+.listingblock .pygments .tok-sr { color: #235388 } /* Literal.String.Regex */
+.listingblock .pygments .tok-s1 { color: #4070a0 } /* Literal.String.Single */
+.listingblock .pygments .tok-ss { color: #517918 } /* Literal.String.Symbol */
+.listingblock .pygments .tok-bp { color: #007020 } /* Name.Builtin.Pseudo */
+.listingblock .pygments .tok-vc { color: #bb60d5 } /* Name.Variable.Class */
+.listingblock .pygments .tok-vg { color: #bb60d5 } /* Name.Variable.Global */
+.listingblock .pygments .tok-vi { color: #bb60d5 } /* Name.Variable.Instance */
+.listingblock .pygments .tok-il { color: #40a070 } /* Literal.Number.Integer.Long */
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic|Liberation+Mono:400|Roboto+Slab:400,700"/>
+<link rel="stylesheet" href="https://www.niwi.nz/_assets/asciidoctor-styles/simple-red-titles/stylesheet.css"/>
+</head>
+<body class="article toc2 toc-left">
+<div id="header">
+<h1>struct - Structural validation library</h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#introduction">Introduction</a>
+<ul class="sectlevel2">
+<li><a href="#project-maturity">Project Maturity</a></li>
+<li><a href="#install">Install</a></li>
+</ul>
+</li>
+<li><a href="#user-guide">User guide</a>
+<ul class="sectlevel2">
+<li><a href="#quick-start">Quick Start</a></li>
+<li><a href="#parametrized-validators">Parametrized validators</a></li>
+<li><a href="#custom-messages">Custom messages</a></li>
+<li><a href="#data-coersions">Data coersions</a></li>
+<li><a href="#builtin-validators">Builtin Validators</a></li>
+<li><a href="#define-own-validator">Define own validator</a></li>
+</ul>
+</li>
+<li><a href="#developers-guide">Developers Guide</a>
+<ul class="sectlevel2">
+<li><a href="#contributing">Contributing</a></li>
+<li><a href="#get-the-code">Get the Code</a></li>
+<li><a href="#run-tests">Run tests</a></li>
+<li><a href="#license">License</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div class="sect1">
+<h2 id="introduction"><a class="link" href="#introduction">Introduction</a></h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>A structural validation library for Clojure and ClojureScript.</p>
+</div>
+<div class="paragraph">
+<p>But with this differences:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>No macros</strong>: validators are defined using plain data.</p>
+</li>
+<li>
+<p><strong>Dependent validators</strong>: the ability to access to already validated data.</p>
+</li>
+<li>
+<p><strong>Coersion</strong>: the ability to coerce incoming values to other types.</p>
+</li>
+<li>
+<p><strong>No exceptions</strong>: no exceptions used in the validation process.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Based on similar ideas of
+<a href="https://github.com/leonardoborges/bouncer">bouncer</a>.</p>
+</div>
+<div class="sect2">
+<h3 id="project-maturity"><a class="link" href="#project-maturity">Project Maturity</a></h3>
+<div class="paragraph">
+<p>Since <em>struct</em> is a young project there may be some API breakage.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="install"><a class="link" href="#install">Install</a></h3>
+<div class="paragraph">
+<p>Just include that in your depencency vector on <strong><em>project.clj</em></strong>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">[</span><span class="tok-nv">funcool/struct</span> <span class="tok-s">&quot;0.1.0&quot;</span><span class="tok-p">]</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="user-guide"><a class="link" href="#user-guide">User guide</a></h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="quick-start"><a class="link" href="#quick-start">Quick Start</a></h3>
+<div class="paragraph">
+<p>Let&#8217;s require the main <em>struct</em> namespace:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-nf">require</span> <span class="tok-o">&#39;</span><span class="tok-p">[</span><span class="tok-nv">struct.core</span> <span class="tok-ss">:as</span> <span class="tok-nv">st</span><span class="tok-p">])</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Define a small schema for the example purpose:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-k">def </span><span class="tok-nv">+scheme+</span>
+  <span class="tok-p">{</span><span class="tok-ss">:name</span> <span class="tok-p">[</span><span class="tok-nv">st/required</span> <span class="tok-nv">st/string</span><span class="tok-p">]</span>
+   <span class="tok-ss">:year</span> <span class="tok-p">[</span><span class="tok-nv">st/required</span> <span class="tok-nv">st/number</span><span class="tok-p">]})</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>You can observe that it consists in a simple map when you declare keys and
+corresponding validators for that key. A vector as value allows us to put
+more than one validator for the same key. If you have only one validator for the
+key, you can omit the vector and put it as single value.</p>
+</div>
+<div class="paragraph">
+<p>The same schema can be defined using vectors, if the order of validation
+matters:</p>
+</div>
+<div class="paragraph">
+<p>(def scheme
+  [[:name [st/required st/string]]
+   [:year [st/required st/number]]])</p>
+</div>
+<div class="paragraph">
+<p>By default, all validators are optional so if the value is missing, no error
+will reported. If you want make the value mandatory, you should use a specific
+<code>required</code> validator.</p>
+</div>
+<div class="paragraph">
+<p>And finally, start validating your data:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-nb">-&gt; </span><span class="tok-p">{</span><span class="tok-ss">:name</span> <span class="tok-s">&quot;Blood of Elves&quot;</span> <span class="tok-ss">:year</span> <span class="tok-mi">1994</span><span class="tok-p">}</span>
+    <span class="tok-p">(</span><span class="tok-nf">st/validate</span> <span class="tok-nv">+scheme+</span><span class="tok-p">))</span>
+<span class="tok-c1">;; =&gt; [nil {:name &quot;Blood of Elves&quot; :year 1994}]</span>
+
+<span class="tok-p">(</span><span class="tok-nb">-&gt; </span><span class="tok-p">{</span><span class="tok-ss">:name</span> <span class="tok-s">&quot;Blood of Elves&quot;</span> <span class="tok-ss">:year</span> <span class="tok-s">&quot;1994&quot;</span><span class="tok-p">}</span>
+    <span class="tok-p">(</span><span class="tok-nf">st/validate</span> <span class="tok-nv">+scheme+</span><span class="tok-p">))</span>
+<span class="tok-c1">;; =&gt; [{:year (&quot;must be a number&quot;)} {:name &quot;Blood of Elves&quot;, :year &quot;1994&quot;}]</span>
+
+<span class="tok-p">(</span><span class="tok-nb">-&gt; </span><span class="tok-p">{</span><span class="tok-ss">:year</span> <span class="tok-s">&quot;1994&quot;</span><span class="tok-p">}</span>
+    <span class="tok-p">(</span><span class="tok-nf">st/validate</span> <span class="tok-nv">+scheme+</span><span class="tok-p">))</span>
+<span class="tok-c1">;; =&gt; [{:name (&quot;this field is mandatory&quot;), :year (&quot;must be a number&quot;)} {}]</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If only want to know if some data is valid or not, you can use the <code>valid?</code> predicate
+for that purpose:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-nf">st/valid?</span> <span class="tok-p">{</span><span class="tok-ss">:year</span> <span class="tok-s">&quot;1994&quot;</span><span class="tok-p">}</span> <span class="tok-nv">+scheme+</span><span class="tok-p">)</span>
+<span class="tok-c1">;; =&gt; false</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The additional entries in the map will be striped by default, but this
+can be turned off passing an additional flag as third argument:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-nb">-&gt; </span><span class="tok-p">{</span><span class="tok-ss">:name</span> <span class="tok-s">&quot;Blood of Elves&quot;</span> <span class="tok-ss">:year</span> <span class="tok-mi">1994</span> <span class="tok-ss">:foo</span> <span class="tok-s">&quot;bar&quot;</span><span class="tok-p">}</span>
+    <span class="tok-p">(</span><span class="tok-nf">st/validate</span> <span class="tok-nv">+scheme+</span><span class="tok-p">))</span>
+<span class="tok-c1">;; =&gt; [nil {:name &quot;Blood of Elves&quot; :year 1994}]</span>
+
+<span class="tok-p">(</span><span class="tok-nb">-&gt; </span><span class="tok-p">{</span><span class="tok-ss">:name</span> <span class="tok-s">&quot;Blood of Elves&quot;</span> <span class="tok-ss">:year</span> <span class="tok-mi">1994</span> <span class="tok-ss">:foo</span> <span class="tok-s">&quot;bar&quot;</span><span class="tok-p">}</span>
+    <span class="tok-p">(</span><span class="tok-nf">st/validate</span> <span class="tok-nv">+scheme+</span> <span class="tok-p">{</span><span class="tok-ss">:strip</span> <span class="tok-nv">false</span><span class="tok-p">}))</span>
+<span class="tok-c1">;; =&gt; [nil {:name &quot;Blood of Elves&quot; :year 1994 :foo &quot;bar&quot;}]</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="parametrized-validators"><a class="link" href="#parametrized-validators">Parametrized validators</a></h3>
+<div class="paragraph">
+<p>Additionally to simple validators, other may require additional parameters
+(e.g. <code>in-range</code>). This is how them can be passed to the validator:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-k">def </span><span class="tok-nv">schema</span> <span class="tok-p">{</span><span class="tok-ss">:num</span> <span class="tok-p">[[</span><span class="tok-nv">st/in-range</span> <span class="tok-mi">10</span> <span class="tok-mi">20</span><span class="tok-p">]]})</span>
+
+<span class="tok-p">(</span><span class="tok-nf">st/validate</span> <span class="tok-p">{</span><span class="tok-ss">:num</span> <span class="tok-mi">21</span><span class="tok-p">}</span> <span class="tok-nv">schema</span><span class="tok-p">)</span>
+<span class="tok-c1">;; =&gt; [{:num (&quot;not in range&quot;)} {}]</span>
+
+<span class="tok-p">(</span><span class="tok-nf">st/validate</span> <span class="tok-p">{</span><span class="tok-ss">:num</span> <span class="tok-mi">19</span><span class="tok-p">}</span> <span class="tok-nv">schema</span><span class="tok-p">)</span>
+<span class="tok-c1">;; =&gt; [nil {:num 19}]</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Note the double vector, the outer denotes a list of validatiors and the inner
+denotes a validator with patameters.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="custom-messages"><a class="link" href="#custom-messages">Custom messages</a></h3>
+<div class="paragraph">
+<p>The builtin validators comes with default messages in human readable format, but
+sometimes you may want to change them (e.g. for i18n purposes). This is how you
+can do it:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-k">def </span><span class="tok-nv">schema</span>
+  <span class="tok-p">{</span><span class="tok-ss">:num</span> <span class="tok-p">[[</span><span class="tok-nv">st/in-range</span> <span class="tok-mi">10</span> <span class="tok-mi">20</span> <span class="tok-ss">:message</span> <span class="tok-s">&quot;errors.not-in-range&quot;</span><span class="tok-p">]]})</span>
+
+<span class="tok-p">(</span><span class="tok-nf">st/validate</span> <span class="tok-p">{</span><span class="tok-ss">:num</span> <span class="tok-mi">21</span><span class="tok-p">}</span> <span class="tok-nv">schema</span><span class="tok-p">)</span>
+<span class="tok-c1">;; =&gt; [{:num (&quot;errors.not-in-range&quot;)} {}]</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="data-coersions"><a class="link" href="#data-coersions">Data coersions</a></h3>
+<div class="paragraph">
+<p>Additionally to simple validation process, this library includes the facility
+for coerce values and a collection of validators that matches over strings. Let
+see some code:</p>
+</div>
+<div class="listingblock">
+<div class="title">Example attaching custom coersions</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-k">def </span><span class="tok-nv">schema</span>
+  <span class="tok-p">{</span><span class="tok-ss">:year</span> <span class="tok-p">[[</span><span class="tok-nv">st/integer</span> <span class="tok-ss">:coerce</span> <span class="tok-nv">str</span><span class="tok-p">]]})</span>
+
+<span class="tok-p">(</span><span class="tok-nf">st/validate</span> <span class="tok-p">{</span><span class="tok-ss">:year</span> <span class="tok-mi">1994</span><span class="tok-p">}</span> <span class="tok-nv">schema</span><span class="tok-p">))</span>
+<span class="tok-c1">;; =&gt; [nil {:year &quot;1994&quot;}]</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>From previous example, you can see that the data returned from the validation
+process, the value is properly coerced with the specified coersion function.</p>
+</div>
+<div class="paragraph">
+<p>Furthermore, this library comes with a collection of validators that already
+has attached coersion function, and them serves just for validate paraeters
+that comes in string format and convert later to the appropriate type:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-k">def </span><span class="tok-nv">schema</span> <span class="tok-p">{</span><span class="tok-ss">:year</span> <span class="tok-p">[</span><span class="tok-nv">st/required</span> <span class="tok-nv">st/integer-str</span><span class="tok-p">]</span>
+             <span class="tok-ss">:id</span> <span class="tok-p">[</span><span class="tok-nv">st/required</span> <span class="tok-nv">st/uuid-str</span><span class="tok-p">]})</span>
+
+<span class="tok-p">(</span><span class="tok-nf">st/validate</span> <span class="tok-p">{</span><span class="tok-ss">:year</span> <span class="tok-s">&quot;1994&quot;</span>
+              <span class="tok-ss">:id</span> <span class="tok-s">&quot;543e7472-6624-4cb5-b65e-f3c341843d0f&quot;</span><span class="tok-p">}</span>
+             <span class="tok-nv">schema</span><span class="tok-p">)</span>
+<span class="tok-c1">;; =&gt; [nil {:year 1994, :id #uuid &quot;543e7472-6624-4cb5-b65e-f3c341843d0f&quot;}]</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>For facilitate this operation, it there <code>validate!</code> function that receives the
+data and scheme and returns the resulting data. If data not matches the schema
+an exception will be raised using <code>ex-info</code> clojure facility:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-nf">st/validate!</span> <span class="tok-p">{</span><span class="tok-ss">:year</span> <span class="tok-s">&quot;1994&quot;</span> <span class="tok-ss">:id</span> <span class="tok-s">&quot;543e7472-6624-4cb5-b65e-f3c341843d0f&quot;</span><span class="tok-p">}</span> <span class="tok-nv">schema</span><span class="tok-p">)</span>
+<span class="tok-c1">;; =&gt; {:year 1994, :id #uuid &quot;543e7472-6624-4cb5-b65e-f3c341843d0f&quot;}</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="builtin-validators"><a class="link" href="#builtin-validators">Builtin Validators</a></h3>
+<div class="paragraph">
+<p>This is the table with available builtin validators:</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 1. Builtin Validators</caption>
+<colgroup>
+<col style="width: 28.5714%;">
+<col style="width: 14.2857%;">
+<col style="width: 57.1429%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Identifier</th>
+<th class="tableblock halign-left valign-top">Coersion</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>struct.core/keyword</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">no</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Validator for clojure&#8217;s keyword</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>struct.core/uuid</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">no</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Validator for UUID&#8217;s</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>struct.core/uuid-str</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">yes</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Validator for uuid strings with coersion to UUID</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>struct.core/email</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">no</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Validator for email string.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>struct.core/required</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">no</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Marks field as required.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>struct.core/number</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">no</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Validator for Number.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>struct.core/number-str</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">yes</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Validator for number string.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>struct.core/integer</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">no</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Validator for integer.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>struct.core/integer-str</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">yes</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Validator for integer string.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>struct.core/boolean</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">no</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Validator for boolean.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>struct.core/boolean-str</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">yes</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Validator for boolean string.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>struct.core/string</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">no</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Validator for string.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>struct.core/string-str</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">yes</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Validator for string like.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>struct.core/in-range</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">no</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Validator for a number range.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>struct.core/member</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">no</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Validator for check if a value is member of coll.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>struct.core/positive</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">no</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Validator for positive number.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>struct.core/negative</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">no</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Validator for negative number.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>struct.core/function</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">no</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Validator for IFn interface.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>struct.core/vector</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">no</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Validator for clojure vector.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>struct.core/map</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">no</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Validator for clojure map.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>struct.core/set</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">no</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Validator for clojure set.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>struct.core/coll</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">no</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Validator for clojure coll.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>struct.core/every</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">no</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Validator for check if pred match for every item in coll.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">`struct.core/identical-to</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">no</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Validator for check that value is identical to other field.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Additional notes:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>number-str</code> coerces to <code>java.lang.Double</code> or <code>float</code> (cljs)</p>
+</li>
+<li>
+<p><code>boolean-str</code> coerces to <code>true</code> (<code>"t"</code>, <code>"true"</code>, <code>"1"</code>) or <code>false</code> (<code>"f"</code>, <code>"false"</code>, <code>"0"</code>).</p>
+</li>
+<li>
+<p><code>string-str</code> coerces anything to string using <code>str</code> function.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="define-own-validator"><a class="link" href="#define-own-validator">Define own validator</a></h3>
+<div class="paragraph">
+<p>As is mentioned previously, the validators in <em>struct</em> library are defined using plain
+hash-maps. As example, this is how the builtin <code>integer</code> validator is defined:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-k">def </span><span class="tok-nv">integer</span>
+  <span class="tok-p">{</span><span class="tok-ss">:message</span> <span class="tok-s">&quot;must be a integer&quot;</span>
+   <span class="tok-ss">:optional</span> <span class="tok-nv">true</span>
+   <span class="tok-ss">:validate</span> <span class="tok-nv">integer?</span><span class="tok-p">}))</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If the validator needs access to the previous already validated data, the <code>:state</code> key
+should be present with <code>true</code> as value. Let see the <code>identical-to</code> validator as example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-k">def </span><span class="tok-nv">identical-to</span>
+  <span class="tok-p">{</span><span class="tok-ss">:message</span> <span class="tok-s">&quot;does not match&quot;</span>
+   <span class="tok-ss">:optional</span> <span class="tok-nv">true</span>
+   <span class="tok-ss">:state</span> <span class="tok-nv">true</span>
+   <span class="tok-ss">:validate</span> <span class="tok-p">(</span><span class="tok-k">fn </span><span class="tok-p">[</span><span class="tok-nv">state</span> <span class="tok-nv">v</span> <span class="tok-nv">ref</span><span class="tok-p">]</span>
+               <span class="tok-p">(</span><span class="tok-k">let </span><span class="tok-p">[</span><span class="tok-nv">prev</span> <span class="tok-p">(</span><span class="tok-nb">get </span><span class="tok-nv">state</span> <span class="tok-nv">ref</span><span class="tok-p">)]</span>
+                 <span class="tok-p">(</span><span class="tok-nb">= </span><span class="tok-nv">prev</span> <span class="tok-nv">v</span><span class="tok-p">)))})</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Validators that acces to the state, receives an other argument with the state to validator
+function.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="developers-guide"><a class="link" href="#developers-guide">Developers Guide</a></h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="contributing"><a class="link" href="#contributing">Contributing</a></h3>
+<div class="paragraph">
+<p>Unlike Clojure and other Clojure contrib libs, does not have many restrictions for
+contributions. Just open a issue or pull request.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="get-the-code"><a class="link" href="#get-the-code">Get the Code</a></h3>
+<div class="paragraph">
+<p><em>struct</em> is open source and can be found on
+<a href="https://github.com/funcool/struct">github</a>.</p>
+</div>
+<div class="paragraph">
+<p>You can clone the public repository with this command:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="text">git clone https://github.com/funcool/struct</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="run-tests"><a class="link" href="#run-tests">Run tests</a></h3>
+<div class="paragraph">
+<p>To run the tests execute the following:</p>
+</div>
+<div class="paragraph">
+<p>For the JVM platform:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="text">lein test</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>And for JS platform:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="text">./scripts/build
+node out/tests.js</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>You will need to have nodejs installed on your system.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="license"><a class="link" href="#license">License</a></h3>
+<div class="paragraph">
+<p><em>struct</em> is under public domain:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>This is free and unencumbered software released into the public domain.
+
+Anyone is free to copy, modify, publish, use, compile, sell, or
+distribute this software, either in source code form or as a compiled
+binary, for any purpose, commercial or non-commercial, and by any
+means.
+
+In jurisdictions that recognize copyright laws, the author or authors
+of this software dedicate any and all copyright interest in the
+software to the public domain. We make this dedication for the benefit
+of the public at large and to the detriment of our heirs and
+successors. We intend this dedication to be an overt act of
+relinquishment in perpetuity of all present and future rights to this
+software under copyright law.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+OTHER DEALINGS IN THE SOFTWARE.
+
+For more information, please refer to &lt;http://unlicense.org/&gt;</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2016-04-19 18:48:26 EEST
+</div>
+</div>
+</body>
+</html>
