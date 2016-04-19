@@ -22,6 +22,14 @@
     (t/is (= errors (first result)))
     (t/is (= {:scope "foobar"} (second result)))))
 
+(t/deftest test-single-validators
+  (let [result1 (st/validate-single 2 st/number)
+        result2 (st/validate-single nil st/number)
+        result3 (st/validate-single nil [st/required st/number])]
+    (t/is (= [nil 2] result1))
+    (t/is (= [nil nil] result2))
+    (t/is (= ['("this field is mandatory") nil] result3))))
+
 (t/deftest test-simple-validators-with-vector-schema
   (let [scheme [[:max st/number]
                 [:scope st/string]]

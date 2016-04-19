@@ -7,15 +7,6 @@
 (def ^:private map' #?(:cljs cljs.core/map
                        :clj clojure.core/map))
 
-(defn- apply-coersion
-  [step value]
-  (if-let [coercefn (:coerce step identity)]
-    (try
-      [nil (coercefn value)]
-      (catch #?(:cljs :default :clj Exception) e
-        [e value]))
-    value))
-
 (defn- apply-validation
   [step data value]
   (if-let [validate (:validate step nil)]
@@ -36,32 +27,25 @@
       m)
     (dissoc m k)))
 
-(defn- run-step
-  [opts [errors data] step]
-  (let [path (:path step)
-        value (get-in data path)
-        translate (:translate opts identity)]
-    (if (and (nil? value) (:optional step))
-      [errors data]
-      (let [message (as-> (:message step "errors.invalid") $
-                      (translate $)
-                      (apply str/format $ (:args step)))]
-        (if (apply-validation step data value)
-          (let [[err value] (apply-coersion step value)]
-            (if err
-              [(update-in errors path conj message)
-               (dissoc-in data path)]
-              [errors (assoc-in data path value)]))
-          [(update-in errors path conj message)
-           (dissoc-in data path)])))))
+(defn- prepare-message
+  [opts step]
+  (if (::nomsg opts)
+    ::nomsg
+    (let [msg (:message step "errors.invalid")
+          tr (:translate opts identity)]
+      (apply str/format (tr msg) (:args step)))))
 
-(def opts-keywords #{:coerce :message :optional})
+(def ^:const ^:private opts-params
+  #{:coerce :message :optional})
+
+(def ^:private notopts?
+  (complement opts-params))
 
 (defn- build-step
   [key item]
   (if (vector? item)
     (let [validator (first item)
-          result (split-with (complement opts-keywords) (rest item))
+          result (split-with notopts? (rest item))
           args (first result)
           opts (apply hash-map (second result))]
       (merge (assoc validator :args args :path [key])
@@ -71,21 +55,23 @@
 (defn- normalize-step-map-entry
   [acc key value]
   (if (vector? value)
-    (reduce #(conj %1 (build-step key %2)) acc value)
-    (conj acc (build-step key value))))
+    (reduce #(conj! %1 (build-step key %2)) acc value)
+    (conj! acc (build-step key value))))
 
 (defn- normalize-step-entry
   [acc [key & values]]
-  (reduce #(conj %1 (build-step key %2)) acc values))
+  (reduce #(conj! %1 (build-step key %2)) acc values))
 
 (defn- build-steps
   [schema]
   (cond
     (vector? schema)
-    (reduce normalize-step-entry [] schema)
+    (persistent!
+     (reduce normalize-step-entry (transient []) schema))
 
     (map? schema)
-    (reduce-kv normalize-step-map-entry [] schema)
+    (persistent!
+     (reduce-kv normalize-step-map-entry (transient []) schema))
 
     :else
     (throw (ex-info "Invalid schema." {}))))
@@ -93,25 +79,65 @@
 (defn- strip-values
   [data steps]
   (reduce (fn [acc path]
-            (if-let [value (get-in data path)]
-              (assoc-in acc path value)
-              acc))
+            (let [value (get-in data path ::notexists)]
+              (if (not= value ::notexists)
+                (assoc-in acc path value)
+                acc)))
           {}
           (into #{} (map' :path steps))))
+
+(defn- validate-internal
+  [data steps opts]
+  (loop [errors nil
+         data data
+         steps steps]
+    (if-let [step (first steps)]
+      (let [path (:path step)
+            value (get-in data path)]
+         (if (and (nil? value) (:optional step))
+           (recur errors data (rest steps))
+           (if (apply-validation step data value)
+             (let [value ((:coerce step identity) value)]
+               (recur errors (assoc-in data path value) (rest steps)))
+             (let [message (prepare-message opts step)]
+               (recur (update-in errors path conj message)
+                      (dissoc-in data path)
+                      (rest steps))))))
+         [errors data])))
 
 ;; --- Public Api
 
 (defn validate
-  ([data schema] (validate data schema nil))
+  "Validate data with specified schema.
+
+  This function by default strips all data that does not defined in
+  schema, but this behavior can be changed passing `{:strip false}`
+  as third argument."
+  ([data schema]
+   (validate data schema nil))
   ([data schema {:keys [strip]
-                 :or {strip true}
+                 :or {strip false}
                  :as opts}]
    (let [steps (build-steps schema)
-         data  (if strip (strip-values data steps) data)
-         seed [nil data]]
-     (reduce (partial run-step opts) seed steps))))
+         data (if strip (strip-values data steps) data)]
+     (validate-internal data steps opts))))
+
+(defn validate-single
+  "A helper that used just for validate one value."
+  ([data schema] (validate-single data schema nil))
+  ([data schema opts]
+   (let [data {:field data}
+         steps (build-steps {:field schema})]
+     (mapv :field (validate-internal data steps opts)))))
 
 (defn validate!
+  "Analogous function to the `validate` that instead of return
+  the errors, just raise a ex-info exception with errors in case
+  them are or just return the validated data.
+
+  This function accepts the same parameters as `validate` with
+  an additional `:message` that serves for customize the exception
+  message."
   ([data schema]
    (validate! data schema nil))
   ([data schema {:keys [message] :or {message "Schema validation error"} :as opts}]
@@ -121,8 +147,15 @@
        data))))
 
 (defn valid?
+  "Return true if the data matches the schema, otherwise
+  return false."
   [data schema]
-  (empty? (first (validate data schema))))
+  (nil? (first (validate data schema {::nomsg true}))))
+
+(defn valid-single?
+  "Analogous function to `valid?` that just validates single value."
+  [data schema]
+  (nil? (first (validate-single data schema {::nomsg true}))))
 
 ;; --- Validators
 
@@ -265,7 +298,7 @@
 (def every
   {:message "must match the predicate"
    :optional true
-   :validato #(every? %2 %1)})
+   :validate #(every? %2 %1)})
 
 (def member
   {:message "not in coll"
