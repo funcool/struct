@@ -189,10 +189,12 @@ key, you can omit the vector and put it as single value.</p>
 <p>The same schema can be defined using vectors, if the order of validation
 matters:</p>
 </div>
-<div class="paragraph">
-<p>(def scheme
-  [[:name [st/required st/string]]
-   [:year [st/required st/number]]])</p>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-k">def </span><span class="tok-nv">+scheme+</span>
+  <span class="tok-p">[[</span><span class="tok-ss">:name</span> <span class="tok-p">[</span><span class="tok-nv">st/required</span> <span class="tok-nv">st/string</span><span class="tok-p">]]</span>
+   <span class="tok-p">[</span><span class="tok-ss">:year</span> <span class="tok-p">[</span><span class="tok-nv">st/required</span> <span class="tok-nv">st/number</span><span class="tok-p">]]])</span></code></pre>
+</div>
 </div>
 <div class="paragraph">
 <p>By default, all validators are optional so if the value is missing, no error
@@ -616,7 +618,7 @@ For more information, please refer to &lt;http://unlicense.org/&gt;</pre>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-05-03 11:02:06 EEST
+Last updated 2016-05-03 11:19:20 EEST
 </div>
 </div>
 </body>
