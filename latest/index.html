@@ -93,7 +93,7 @@
 <li><a href="#custom-messages">Custom messages</a></li>
 <li><a href="#data-coersions">Data coersions</a></li>
 <li><a href="#builtin-validators">Builtin Validators</a></li>
-<li><a href="#define-own-validator">Define own validator</a></li>
+<li><a href="#define-your-own-validator">Define your own validator</a></li>
 </ul>
 </li>
 <li><a href="#developers-guide">Developers Guide</a>
@@ -228,8 +228,8 @@ for that purpose:</p>
 </div>
 </div>
 <div class="paragraph">
-<p>The additional entries in the map will be striped by default, but this
-can be turned off passing an additional flag as third argument:</p>
+<p>The additional entries in the map will be stripped by default, but this
+can be turned off passing an additional flag as the third argument:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -246,8 +246,8 @@ can be turned off passing an additional flag as third argument:</p>
 <div class="sect2">
 <h3 id="parametrized-validators"><a class="link" href="#parametrized-validators">Parametrized validators</a></h3>
 <div class="paragraph">
-<p>Additionally to simple validators, other may require additional parameters
-(e.g. <code>in-range</code>). This is how them can be passed to the validator:</p>
+<p>In addition to simple validators, one may use additional contraints
+(e.g. <code>in-range</code>). This is how they can be passed to the validator:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -261,7 +261,7 @@ can be turned off passing an additional flag as third argument:</p>
 </div>
 </div>
 <div class="paragraph">
-<p>Note the double vector, the outer denotes a list of validatiors and the inner
+<p>Note the double vector; the outer denotes a list of validatiors and the inner
 denotes a validator with patameters.</p>
 </div>
 </div>
@@ -285,8 +285,8 @@ can do it:</p>
 <div class="sect2">
 <h3 id="data-coersions"><a class="link" href="#data-coersions">Data coersions</a></h3>
 <div class="paragraph">
-<p>Additionally to simple validation process, this library includes the facility
-for coerce values and a collection of validators that matches over strings. Let
+<p>In addition to simple validations, this library includes the ability
+to coerce values, and a collection of validators that matches over strings. Let&#8217;s
 see some code:</p>
 </div>
 <div class="listingblock">
@@ -300,13 +300,13 @@ see some code:</p>
 </div>
 </div>
 <div class="paragraph">
-<p>From previous example, you can see that the data returned from the validation
-process, the value is properly coerced with the specified coersion function.</p>
+<p>Looking at the data returned from the validation
+process, one can see that the value is properly coerced with the specified coersion function.</p>
 </div>
 <div class="paragraph">
-<p>Furthermore, this library comes with a collection of validators that already
-has attached coersion function, and them serves just for validate paraeters
-that comes in string format and convert later to the appropriate type:</p>
+<p>This library comes with a collection of validators that already
+have attached coersion functions. These serve to validate parameters
+that arrive as strings but need to be converted to the appropriate type:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -320,8 +320,8 @@ that comes in string format and convert later to the appropriate type:</p>
 </div>
 </div>
 <div class="paragraph">
-<p>For facilitate this operation, it there <code>validate!</code> function that receives the
-data and scheme and returns the resulting data. If data not matches the schema
+<p>To facilitate this operation, the <code>validate!</code> function receives the
+data and schema, then returns the resulting data. If data not matches the schema
 an exception will be raised using <code>ex-info</code> clojure facility:</p>
 </div>
 <div class="listingblock">
@@ -467,7 +467,7 @@ an exception will be raised using <code>ex-info</code> clojure facility:</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Validator for check if pred match for every item in coll.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">`struct.core/identical-to</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>struct.core/identical-to</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">no</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Validator for check that value is identical to other field.</p></td>
 </tr>
@@ -491,10 +491,10 @@ an exception will be raised using <code>ex-info</code> clojure facility:</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="define-own-validator"><a class="link" href="#define-own-validator">Define own validator</a></h3>
+<h3 id="define-your-own-validator"><a class="link" href="#define-your-own-validator">Define your own validator</a></h3>
 <div class="paragraph">
-<p>As is mentioned previously, the validators in <em>struct</em> library are defined using plain
-hash-maps. As example, this is how the builtin <code>integer</code> validator is defined:</p>
+<p>As mentioned previously, the validators in <em>struct</em> library are defined using plain
+hash-maps. For example, this is how the builtin <code>integer</code> validator is defined:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -505,8 +505,8 @@ hash-maps. As example, this is how the builtin <code>integer</code> validator is
 </div>
 </div>
 <div class="paragraph">
-<p>If the validator needs access to the previous already validated data, the <code>:state</code> key
-should be present with <code>true</code> as value. Let see the <code>identical-to</code> validator as example:</p>
+<p>If the validator needs access to previously validated data, the <code>:state</code> key
+should be present with the value <code>true</code>. Let see the <code>identical-to</code> validator as example:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -520,7 +520,7 @@ should be present with <code>true</code> as value. Let see the <code>identical-t
 </div>
 </div>
 <div class="paragraph">
-<p>Validators that acces to the state, receives an other argument with the state to validator
+<p>Validators that access the state receive an additional argument with the state for validator
 function.</p>
 </div>
 </div>
@@ -532,8 +532,8 @@ function.</p>
 <div class="sect2">
 <h3 id="contributing"><a class="link" href="#contributing">Contributing</a></h3>
 <div class="paragraph">
-<p>Unlike Clojure and other Clojure contrib libs, does not have many restrictions for
-contributions. Just open a issue or pull request.</p>
+<p>Unlike Clojure and other Clojure contrib libs, there aren&#8217;t many restrictions for
+contributions. Just open an issue or pull request.</p>
 </div>
 </div>
 <div class="sect2">
@@ -616,7 +616,7 @@ For more information, please refer to &lt;http://unlicense.org/&gt;</pre>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-05-03 09:14:53 EEST
+Last updated 2016-05-03 11:02:06 EEST
 </div>
 </div>
 </body>
