@@ -100,8 +100,8 @@ for that purpose:
 ;; => false
 ----
 
-The additional entries in the map will be striped by default, but this
-can be turned off passing an additional flag as third argument:
+The additional entries in the map will be stripped by default, but this
+can be turned off passing an additional flag as the third argument:
 
 [source, clojure]
 ----
@@ -117,8 +117,8 @@ can be turned off passing an additional flag as third argument:
 
 === Parametrized validators
 
-Additionally to simple validators, other may require additional parameters
-(e.g. `in-range`). This is how them can be passed to the validator:
+In addition to simple validators, one may use additional contraints
+(e.g. `in-range`). This is how they can be passed to the validator:
 
 [source, clojure]
 ----
@@ -131,9 +131,8 @@ Additionally to simple validators, other may require additional parameters
 ;; => [nil {:num 19}]
 ----
 
-Note the double vector, the outer denotes a list of validatiors and the inner
+Note the double vector; the outer denotes a list of validatiors and the inner
 denotes a validator with patameters.
-
 
 === Custom messages
 
@@ -150,11 +149,10 @@ can do it:
 ;; => [{:num ("errors.not-in-range")} {}]
 ----
 
-
 === Data coersions
 
-Additionally to simple validation process, this library includes the facility
-for coerce values and a collection of validators that matches over strings. Let
+In addition to simple validations, this library includes the ability
+to coerce values, and a collection of validators that matches over strings. Let's
 see some code:
 
 .Example attaching custom coersions
@@ -167,12 +165,12 @@ see some code:
 ;; => [nil {:year "1994"}]
 ----
 
-From previous example, you can see that the data returned from the validation
-process, the value is properly coerced with the specified coersion function.
+Looking at the data returned from the validation
+process, one can see that the value is properly coerced with the specified coersion function.
 
-Furthermore, this library comes with a collection of validators that already
-has attached coersion function, and them serves just for validate paraeters
-that comes in string format and convert later to the appropriate type:
+This library comes with a collection of validators that already
+have attached coersion functions. These serve to validate parameters
+that arrive as strings but need to be converted to the appropriate type:
 
 [source, clojure]
 ----
@@ -185,8 +183,8 @@ that comes in string format and convert later to the appropriate type:
 ;; => [nil {:year 1994, :id #uuid "543e7472-6624-4cb5-b65e-f3c341843d0f"}]
 ----
 
-For facilitate this operation, it there `validate!` function that receives the
-data and scheme and returns the resulting data. If data not matches the schema
+To facilitate this operation, the `validate!` function receives the
+data and schema, then returns the resulting data. If data not matches the schema
 an exception will be raised using `ex-info` clojure facility:
 
 [source, clojure]
@@ -226,7 +224,7 @@ This is the table with available builtin validators:
 | `struct.core/set`         | no       | Validator for clojure set.
 | `struct.core/coll`        | no       | Validator for clojure coll.
 | `struct.core/every`       | no       | Validator for check if pred match for every item in coll.
-| `struct.core/identical-to | no       | Validator for check that value is identical to other field.
+| `struct.core/identical-to` | no       | Validator for check that value is identical to other field.
 |===========================================================================
 
 Additional notes:
@@ -236,10 +234,10 @@ Additional notes:
 * `string-str` coerces anything to string using `str` function.
 
 
-=== Define own validator
+=== Define your own validator
 
-As is mentioned previously, the validators in _struct_ library are defined using plain
-hash-maps. As example, this is how the builtin `integer` validator is defined:
+As mentioned previously, the validators in _struct_ library are defined using plain
+hash-maps. For example, this is how the builtin `integer` validator is defined:
 
 [source, clojure]
 ----
@@ -249,8 +247,8 @@ hash-maps. As example, this is how the builtin `integer` validator is defined:
    :validate integer?}))
 ----
 
-If the validator needs access to the previous already validated data, the `:state` key
-should be present with `true` as value. Let see the `identical-to` validator as example:
+If the validator needs access to previously validated data, the `:state` key
+should be present with the value `true`. Let see the `identical-to` validator as example:
 
 [source,clojure]
 ----
@@ -263,16 +261,15 @@ should be present with `true` as value. Let see the `identical-to` validator as 
                  (= prev v)))})
 ----
 
-Validators that acces to the state, receives an other argument with the state to validator
+Validators that access the state receive an additional argument with the state for validator
 function.
-
 
 == Developers Guide
 
 === Contributing
 
-Unlike Clojure and other Clojure contrib libs, does not have many restrictions for
-contributions. Just open a issue or pull request.
+Unlike Clojure and other Clojure contrib libs, there aren't many restrictions for
+contributions. Just open an issue or pull request.
 
 
 === Get the Code
@@ -308,7 +305,6 @@ node out/tests.js
 ----
 
 You will need to have nodejs installed on your system.
-
 
 === License
 
