@@ -66,9 +66,12 @@ key, you can omit the vector and put it as single value.
 The same schema can be defined using vectors, if the order of validation
 matters:
 
+[source, clojure]
+----
 (def +scheme+
   [[:name [st/required st/string]]
    [:year [st/required st/number]]])
+----
 
 By default, all validators are optional so if the value is missing, no error
 will reported. If you want make the value mandatory, you should use a specific
