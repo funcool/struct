@@ -1,4 +1,4 @@
-= struct - Structural validation library
+= struct - validation library for Clojure(Script)
 :toc: left
 :!numbered:
 :idseparator: -
@@ -12,7 +12,7 @@
 
 A structural validation library for Clojure and ClojureScript.
 
-But with this differences:
+Highlights:
 
 - *No macros*: validators are defined using plain data.
 - *Dependent validators*: the ability to access to already validated data.
