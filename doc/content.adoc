@@ -69,8 +69,8 @@ matters:
 [source, clojure]
 ----
 (def +scheme+
-  [[:name [st/required st/string]]
-   [:year [st/required st/number]]])
+  [[:name st/required st/string]
+   [:year st/required st/number]])
 ----
 
 By default, all validators are optional so if the value is missing, no error
