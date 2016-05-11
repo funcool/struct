@@ -88,22 +88,31 @@
 
 (defn- validate-internal
   [data steps opts]
-  (loop [errors nil
+  (loop [skip #{}
+         errors nil
          data data
          steps steps]
     (if-let [step (first steps)]
       (let [path (:path step)
             value (get-in data path)]
-         (if (and (nil? value) (:optional step))
-           (recur errors data (rest steps))
-           (if (apply-validation step data value)
-             (let [value ((:coerce step identity) value)]
-               (recur errors (assoc-in data path value) (rest steps)))
-             (let [message (prepare-message opts step)]
-               (recur (update-in errors path conj message)
-                      (dissoc-in data path)
-                      (rest steps))))))
-         [errors data])))
+        (cond
+          (contains? skip path)
+          (recur skip errors data (rest steps))
+
+          (and (nil? value) (:optional step))
+          (recur skip errors data (rest steps))
+
+          (apply-validation step data value)
+          (let [value ((:coerce step identity) value)]
+            (recur skip errors (assoc-in data path value) (rest steps)))
+
+          :else
+          (let [message (prepare-message opts step)]
+            (recur (conj skip path)
+                   (assoc-in errors path message)
+                   (dissoc-in data path)
+                   (rest steps)))))
+      [errors data])))
 
 ;; --- Public Api
 

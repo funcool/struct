@@ -17,7 +17,7 @@
   (let [scheme {:max st/number
                 :scope st/string}
         input {:scope "foobar" :max "d"}
-        errors {:max '("must be a number")}
+        errors {:max "must be a number"}
         result (st/validate input scheme)]
     (t/is (= errors (first result)))
     (t/is (= {:scope "foobar"} (second result)))))
@@ -26,7 +26,7 @@
   (let [scheme {[:a :b] st/number
                 [:c :d :e] st/string}
         input {:a {:b "foo"} :c {:d {:e "bar"}}}
-        errors {:a {:b '("must be a number")}}
+        errors {:a {:b "must be a number"}}
         result (st/validate input scheme)]
     (t/is (= errors (first result)))
     (t/is (= {:c {:d {:e "bar"}}} (second result)))))
@@ -37,13 +37,13 @@
         result3 (st/validate-single nil [st/required st/number])]
     (t/is (= [nil 2] result1))
     (t/is (= [nil nil] result2))
-    (t/is (= ['("this field is mandatory") nil] result3))))
+    (t/is (= ["this field is mandatory" nil] result3))))
 
 (t/deftest test-simple-validators-with-vector-schema
   (let [scheme [[:max st/number]
                 [:scope st/string]]
         input {:scope "foobar" :max "d"}
-        errors {:max '("must be a number")}
+        errors {:max "must be a number"}
         result (st/validate input scheme)]
     (t/is (= errors (first result)))
     (t/is (= {:scope "foobar"} (second result)))))
@@ -52,7 +52,7 @@
   (let [scheme [[:max st/number]
                 [:scope st/string]]
         input {:scope "foobar" :max "d"}
-        errors {:max '("a")}
+        errors {:max "a"}
         result (st/validate input scheme {:translate (constantly "a")})]
     (t/is (= errors (first result)))
     (t/is (= {:scope "foobar"} (second result)))))
@@ -62,7 +62,7 @@
                 [:password2 [st/identical-to :password1]]]
         input {:password1 "foobar"
                :password2 "foobar."}
-        errors {:password2 '("does not match")}
+        errors {:password2 "does not match"}
         result (st/validate input scheme)]
     (t/is (= errors (first result)))
     (t/is (= {:password1 "foobar"} (second result)))))
@@ -81,7 +81,7 @@
   (let [scheme {:max [st/required st/number]
                 :scope st/string}
         input {:scope "foobar"}
-        errors {:max '("this field is mandatory")}
+        errors {:max "this field is mandatory"}
         result (st/validate input scheme)]
     (t/is (= errors (first result)))
     (t/is (= {:scope "foobar"} (second result)))))
@@ -106,7 +106,7 @@
   (let [scheme {:max [[st/number-str :message "custom msg"]]
                 :scope st/string}
         input {:max "g" :scope "foobar"}
-        errors {:max '("custom msg")}
+        errors {:max "custom msg"}
         result (st/validate input scheme)]
     (t/is (= errors (first result)))
     (t/is (= {:scope "foobar"} (second result)))))
