@@ -22,6 +22,15 @@
     (t/is (= errors (first result)))
     (t/is (= {:scope "foobar"} (second result)))))
 
+(t/deftest test-neested-validators
+  (let [scheme {[:a :b] st/number
+                [:c :d :e] st/string}
+        input {:a {:b "foo"} :c {:d {:e "bar"}}}
+        errors {:a {:b '("must be a number")}}
+        result (st/validate input scheme)]
+    (t/is (= errors (first result)))
+    (t/is (= {:c {:d {:e "bar"}}} (second result)))))
+
 (t/deftest test-single-validators
   (let [result1 (st/validate-single 2 st/number)
         result2 (st/validate-single nil st/number)

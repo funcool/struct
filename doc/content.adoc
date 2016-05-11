@@ -103,18 +103,33 @@ for that purpose:
 ;; => false
 ----
 
-The additional entries in the map will be stripped by default, but this
-can be turned off passing an additional flag as the third argument:
+The additional entries in the map are not stripped by default, but this behavior
+can be changed passing an additional flag as the third argument:
 
 [source, clojure]
 ----
 (-> {:name "Blood of Elves" :year 1994 :foo "bar"}
     (st/validate +scheme+))
-;; => [nil {:name "Blood of Elves" :year 1994}]
+;; => [nil {:name "Blood of Elves" :year 1994 :foo "bar"}]
 
 (-> {:name "Blood of Elves" :year 1994 :foo "bar"}
-    (st/validate +scheme+ {:strip false}))
-;; => [nil {:name "Blood of Elves" :year 1994 :foo "bar"}]
+    (st/validate +scheme+ {:strip true}))
+;; => [nil {:name "Blood of Elves" :year 1994}]
+
+----
+
+With similar syntax you can validate neested data structures, specifying in the
+key part the proper path to the neested data structure:
+
+[source, clojure]
+----
+(def +scheme+
+  {[:a :b] st/integer
+   [:c :d] st/string})
+
+(-> {:a {:b "foo"} {:c {:d "bar"}}}
+    (st/validate +scheme+))
+;; => [{:a {:b '("must be a number")}} {:c {:d "bar"}}]
 ----
 
 
@@ -137,6 +152,7 @@ In addition to simple validators, one may use additional contraints
 Note the double vector; the outer denotes a list of validatiors and the inner
 denotes a validator with patameters.
 
+
 === Custom messages
 
 The builtin validators comes with default messages in human readable format, but
@@ -151,6 +167,7 @@ can do it:
 (st/validate {:num 21} schema)
 ;; => [{:num ("errors.not-in-range")} {}]
 ----
+
 
 === Data coersions
 

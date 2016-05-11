@@ -50,7 +50,7 @@
           opts (apply hash-map (second result))]
       (merge (assoc validator :args args :path [key])
              (select-keys opts [:coerce :message :optional])))
-    (assoc item :args [] :path [key])))
+    (assoc item :args [] :path (if (vector? key) key [key]))))
 
 (defn- normalize-step-map-entry
   [acc key value]
