@@ -87,11 +87,11 @@ And finally, start validating your data:
 
 (-> {:name "Blood of Elves" :year "1994"}
     (st/validate +scheme+))
-;; => [{:year ("must be a number")} {:name "Blood of Elves", :year "1994"}]
+;; => [{:year "must be a number"} {:name "Blood of Elves", :year "1994"}]
 
 (-> {:year "1994"}
     (st/validate +scheme+))
-;; => [{:name ("this field is mandatory"), :year ("must be a number")} {}]
+;; => [{:name "this field is mandatory", :year "must be a number"} {}]
 ----
 
 If only want to know if some data is valid or not, you can use the `valid?` predicate
@@ -129,7 +129,7 @@ key part the proper path to the neested data structure:
 
 (-> {:a {:b "foo"} {:c {:d "bar"}}}
     (st/validate +scheme+))
-;; => [{:a {:b '("must be a number")}} {:c {:d "bar"}}]
+;; => [{:a {:b "must be a number"}} {:c {:d "bar"}}]
 ----
 
 
@@ -143,7 +143,7 @@ In addition to simple validators, one may use additional contraints
 (def schema {:num [[st/in-range 10 20]]})
 
 (st/validate {:num 21} schema)
-;; => [{:num ("not in range")} {}]
+;; => [{:num "not in range"} {}]
 
 (st/validate {:num 19} schema)
 ;; => [nil {:num 19}]
@@ -165,7 +165,7 @@ can do it:
   {:num [[st/in-range 10 20 :message "errors.not-in-range"]]})
 
 (st/validate {:num 21} schema)
-;; => [{:num ("errors.not-in-range")} {}]
+;; => [{:num "errors.not-in-range"} {}]
 ----
 
 
