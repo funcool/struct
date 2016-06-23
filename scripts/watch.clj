@@ -4,7 +4,7 @@
   {:main 'struct.tests
    :target :nodejs
    :output-to "out/tests.js"
-   :output-dir "out"
+   :output-dir "out/tests"
    :pretty-print true
    :optimizations :none
    :language-in  :ecmascript5

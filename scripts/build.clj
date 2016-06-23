@@ -7,7 +7,7 @@
    (b/inputs "test" "src" )
    {:main 'struct.tests
     :output-to "out/tests.js"
-    :output-dir "out"
+   :output-dir "out/tests"
     :target :nodejs
     :pretty-print true
     :optimizations :advanced
