@@ -2,7 +2,7 @@
 
 ## Version 1.0.0 ##
 
-Date: ---
+Date: 2016-06-24
 
 - Add support for neested data structures.
 - Add fast skip already validated and failed paths (performance improvement).
