@@ -34,7 +34,7 @@ Just include that in your depencency vector on *_project.clj_*:
 
 [source,clojure]
 ----
-[funcool/struct "0.1.0"]
+[funcool/struct "1.0.0"]
 ----
 
 
