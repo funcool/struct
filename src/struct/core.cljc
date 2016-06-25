@@ -33,7 +33,7 @@
     ::nomsg
     (let [msg (:message step "errors.invalid")
           tr (:translate opts identity)]
-      (apply str/format (tr msg) (:args step)))))
+      (str/format (tr msg) (vec (:args step))))))
 
 (def ^:const ^:private opts-params
   #{:coerce :message :optional})

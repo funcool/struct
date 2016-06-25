@@ -1,10 +1,10 @@
-(defproject funcool/struct "1.0.0"
+(defproject funcool/struct "1.1.0-SNAPSHOT"
   :description "A structural validation library for Clojure(Script)"
   :url "https://github.com/funcool/struct"
   :license {:name "Public Domain" :url "http://unlicense.org/"}
   :dependencies [[org.clojure/clojure "1.8.0" :scope "provided"]
                  [org.clojure/clojurescript "1.9.89" :scope "provided"]
-                 [funcool/cuerdas "0.7.2"]]
+                 [funcool/cuerdas "0.8.0"]]
   :source-paths ["src"]
   :test-paths ["test"]
   :codeina {:sources ["src"]
