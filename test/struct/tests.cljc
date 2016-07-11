@@ -102,6 +102,16 @@
     (t/is (= nil (first result)))
     (t/is (= {:max :foo :scope "foobar"} (second result)))))
 
+(t/deftest test-validation-with-custom-coersion-with-args
+  (let [default-fn (fn [v default] (or v default))
+        by-default {:optional false :coerce default-fn}
+        scheme {:limit [[by-default 200]]
+                :skip  [[by-default 0]]}
+        input {:limit 100}
+        result (st/validate input scheme)]
+    (t/is (= nil (first result)))
+    (t/is (= {:limit 100 :skip 0} (second result)))))
+
 (t/deftest test-validation-with-custom-message
   (let [scheme {:max [[st/number-str :message "custom msg"]]
                 :scope st/string}
