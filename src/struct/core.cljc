@@ -103,7 +103,9 @@
           (recur skip errors data (rest steps))
 
           (apply-validation step data value)
-          (let [value ((:coerce step identity) value)]
+          (if-let [coerce (:coerce step)]
+            (let [value (apply coerce value (:args step []))]
+              (recur skip errors (assoc-in data path value) (rest steps)))
             (recur skip errors (assoc-in data path value) (rest steps)))
 
           :else
