@@ -332,7 +332,15 @@
             {:pre [(number? c)]}
             (and (string? v)
                  (<= c (count v))))]
-    {:message "not long enough"
+    {:message "too short"
      :optional true
      :validate validate}))
 
+(def max-count
+  (letfn [(validate [v c]
+            {:pre [(number? c)]}
+            (and (string? v)
+                 (>= c (count v))))]
+    {:message "too long"
+     :optional true
+     :validate validate}))
