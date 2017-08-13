@@ -326,3 +326,19 @@
    :validate (fn [state v ref]
                (let [prev (get state ref)]
                  (= prev v)))})
+
+(def min-count
+  (letfn [(validate [v minimum]
+            {:pre [(number? minimum)]}
+            (>= (count v) minimum))]
+    {:message "less than the minimum"
+     :optional true
+     :validate validate}))
+
+(def max-count
+  (letfn [(validate [v maximum]
+            {:pre [(number? maximum)]}
+            (<= (count v) maximum))]
+    {:message "longer than the maximum"
+     :optional true
+     :validate validate}))

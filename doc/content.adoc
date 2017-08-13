@@ -34,7 +34,7 @@ Just include that in your depencency vector on *_project.clj_*:
 
 [source,clojure]
 ----
-[funcool/struct "1.0.0"]
+[funcool/struct "1.1.1"]
 ----
 
 
@@ -220,31 +220,33 @@ This is the table with available builtin validators:
 .Builtin Validators
 [options="header", cols="2,1,4"]
 |===========================================================================
-| Identifier                | Coersion | Description
-| `struct.core/keyword`     | no       | Validator for clojure's keyword
-| `struct.core/uuid`        | no       | Validator for UUID's
-| `struct.core/uuid-str`    | yes      | Validator for uuid strings with coersion to UUID
-| `struct.core/email`       | no       | Validator for email string.
-| `struct.core/required`    | no       | Marks field as required.
-| `struct.core/number`      | no       | Validator for Number.
-| `struct.core/number-str`  | yes      | Validator for number string.
-| `struct.core/integer`     | no       | Validator for integer.
-| `struct.core/integer-str` | yes      | Validator for integer string.
-| `struct.core/boolean`     | no       | Validator for boolean.
-| `struct.core/boolean-str` | yes      | Validator for boolean string.
-| `struct.core/string`      | no       | Validator for string.
-| `struct.core/string-str`  | yes      | Validator for string like.
-| `struct.core/in-range`    | no       | Validator for a number range.
-| `struct.core/member`      | no       | Validator for check if a value is member of coll.
-| `struct.core/positive`    | no       | Validator for positive number.
-| `struct.core/negative`    | no       | Validator for negative number.
-| `struct.core/function`    | no       | Validator for IFn interface.
-| `struct.core/vector`      | no       | Validator for clojure vector.
-| `struct.core/map`         | no       | Validator for clojure map.
-| `struct.core/set`         | no       | Validator for clojure set.
-| `struct.core/coll`        | no       | Validator for clojure coll.
-| `struct.core/every`       | no       | Validator for check if pred match for every item in coll.
-| `struct.core/identical-to` | no       | Validator for check that value is identical to other field.
+| Identifier                 | Coercion | Description
+| `struct.core/keyword`      | no       | Validator for clojure's keyword
+| `struct.core/uuid`         | no       | Validator for UUID's
+| `struct.core/uuid-str`     | yes      | Validator for uuid strings with coercion to UUID
+| `struct.core/email`        | no       | Validator for email string.
+| `struct.core/required`     | no       | Marks field as required.
+| `struct.core/number`       | no       | Validator for Number.
+| `struct.core/number-str`   | yes      | Validator for number string.
+| `struct.core/integer`      | no       | Validator for integer.
+| `struct.core/integer-str`  | yes      | Validator for integer string.
+| `struct.core/boolean`      | no       | Validator for boolean.
+| `struct.core/boolean-str`  | yes      | Validator for boolean string.
+| `struct.core/string`       | no       | Validator for string.
+| `struct.core/string-str`   | yes      | Validator for string like.
+| `struct.core/in-range`     | no       | Validator for a number range.
+| `struct.core/member`       | no       | Validator for check if a value is member of coll.
+| `struct.core/positive`     | no       | Validator for positive number.
+| `struct.core/negative`     | no       | Validator for negative number.
+| `struct.core/function`     | no       | Validator for IFn interface.
+| `struct.core/vector`       | no       | Validator for clojure vector.
+| `struct.core/map`          | no       | Validator for clojure map.
+| `struct.core/set`          | no       | Validator for clojure set.
+| `struct.core/coll`         | no       | Validator for clojure coll.
+| `struct.core/every`        | no       | Validator to check if pred match for every item in coll.
+| `struct.core/identical-to` | no       | Validator to check that value is identical to other field.
+| `struct.core/min-count`    | no       | Validator to check that value is has at least a minimum number of characters.
+| `struct.core/max-count`    | no       | Validator to check that value is not larger than a maximum number of characters.
 |===========================================================================
 
 Additional notes:

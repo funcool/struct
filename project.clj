@@ -1,4 +1,4 @@
-(defproject funcool/struct "1.1.0-SNAPSHOT"
+(defproject funcool/struct "1.1.1-SNAPSHOT"
   :description "A structural validation library for Clojure(Script)"
   :url "https://github.com/funcool/struct"
   :license {:name "Public Domain" :url "http://unlicense.org/"}
