@@ -16,7 +16,7 @@ Highlights:
 
 - *No macros*: validators are defined using plain data.
 - *Dependent validators*: the ability to access to already validated data.
-- *Coersion*: the ability to coerce incoming values to other types.
+- *Coercion*: the ability to coerce incoming values to other types.
 - *No exceptions*: no exceptions used in the validation process.
 
 Based on similar ideas of
@@ -30,7 +30,7 @@ Since _struct_ is a young project there may be some API breakage.
 
 === Install
 
-Just include that in your depencency vector on *_project.clj_*:
+Just include that in your dependency vector on *_project.clj_*:
 
 [source,clojure]
 ----
@@ -169,13 +169,13 @@ can do it:
 ----
 
 
-=== Data coersions
+=== Data coercions
 
 In addition to simple validations, this library includes the ability
 to coerce values, and a collection of validators that matches over strings. Let's
 see some code:
 
-.Example attaching custom coersions
+.Example attaching custom coercions
 [source, clojure]
 ----
 (def schema
@@ -186,10 +186,10 @@ see some code:
 ----
 
 Looking at the data returned from the validation
-process, one can see that the value is properly coerced with the specified coersion function.
+process, one can see that the value is properly coerced with the specified coercion function.
 
 This library comes with a collection of validators that already
-have attached coersion functions. These serve to validate parameters
+have attached coercion functions. These serve to validate parameters
 that arrive as strings but need to be converted to the appropriate type:
 
 [source, clojure]
