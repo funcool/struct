@@ -1,10 +1,12 @@
 # Changelog #
 
-## Version 1.1.1 ##
+## Version 1.1.0 ##
 
-Date: 2017-08-13
+Date: 2017-08-16
 
-- Add count validators
+- Add count validators.
+- Update cuerdas to 2.0.3
+
 
 ## Version 1.0.0 ##
 
