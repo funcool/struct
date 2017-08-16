@@ -16,7 +16,7 @@ Highlights:
 
 - *No macros*: validators are defined using plain data.
 - *Dependent validators*: the ability to access to already validated data.
-- *Coersion*: the ability to coerce incoming values to other types.
+- *Coercion*: the ability to coerce incoming values to other types.
 - *No exceptions*: no exceptions used in the validation process.
 
 Based on similar ideas of
@@ -30,11 +30,11 @@ Since _struct_ is a young project there may be some API breakage.
 
 === Install
 
-Just include that in your depencency vector on *_project.clj_*:
+Just include that in your dependency vector on *_project.clj_*:
 
 [source,clojure]
 ----
-[funcool/struct "1.0.0"]
+[funcool/struct "1.1.1"]
 ----
 
 
@@ -169,13 +169,13 @@ can do it:
 ----
 
 
-=== Data coersions
+=== Data coercions
 
 In addition to simple validations, this library includes the ability
 to coerce values, and a collection of validators that matches over strings. Let's
 see some code:
 
-.Example attaching custom coersions
+.Example attaching custom coercions
 [source, clojure]
 ----
 (def schema
@@ -186,10 +186,10 @@ see some code:
 ----
 
 Looking at the data returned from the validation
-process, one can see that the value is properly coerced with the specified coersion function.
+process, one can see that the value is properly coerced with the specified coercion function.
 
 This library comes with a collection of validators that already
-have attached coersion functions. These serve to validate parameters
+have attached coercion functions. These serve to validate parameters
 that arrive as strings but need to be converted to the appropriate type:
 
 [source, clojure]
@@ -220,31 +220,33 @@ This is the table with available builtin validators:
 .Builtin Validators
 [options="header", cols="2,1,4"]
 |===========================================================================
-| Identifier                | Coersion | Description
-| `struct.core/keyword`     | no       | Validator for clojure's keyword
-| `struct.core/uuid`        | no       | Validator for UUID's
-| `struct.core/uuid-str`    | yes      | Validator for uuid strings with coersion to UUID
-| `struct.core/email`       | no       | Validator for email string.
-| `struct.core/required`    | no       | Marks field as required.
-| `struct.core/number`      | no       | Validator for Number.
-| `struct.core/number-str`  | yes      | Validator for number string.
-| `struct.core/integer`     | no       | Validator for integer.
-| `struct.core/integer-str` | yes      | Validator for integer string.
-| `struct.core/boolean`     | no       | Validator for boolean.
-| `struct.core/boolean-str` | yes      | Validator for boolean string.
-| `struct.core/string`      | no       | Validator for string.
-| `struct.core/string-str`  | yes      | Validator for string like.
-| `struct.core/in-range`    | no       | Validator for a number range.
-| `struct.core/member`      | no       | Validator for check if a value is member of coll.
-| `struct.core/positive`    | no       | Validator for positive number.
-| `struct.core/negative`    | no       | Validator for negative number.
-| `struct.core/function`    | no       | Validator for IFn interface.
-| `struct.core/vector`      | no       | Validator for clojure vector.
-| `struct.core/map`         | no       | Validator for clojure map.
-| `struct.core/set`         | no       | Validator for clojure set.
-| `struct.core/coll`        | no       | Validator for clojure coll.
-| `struct.core/every`       | no       | Validator for check if pred match for every item in coll.
-| `struct.core/identical-to` | no       | Validator for check that value is identical to other field.
+| Identifier                 | Coercion | Description
+| `struct.core/keyword`      | no       | Validator for clojure's keyword
+| `struct.core/uuid`         | no       | Validator for UUID's
+| `struct.core/uuid-str`     | yes      | Validator for uuid strings with coercion to UUID
+| `struct.core/email`        | no       | Validator for email string.
+| `struct.core/required`     | no       | Marks field as required.
+| `struct.core/number`       | no       | Validator for Number.
+| `struct.core/number-str`   | yes      | Validator for number string.
+| `struct.core/integer`      | no       | Validator for integer.
+| `struct.core/integer-str`  | yes      | Validator for integer string.
+| `struct.core/boolean`      | no       | Validator for boolean.
+| `struct.core/boolean-str`  | yes      | Validator for boolean string.
+| `struct.core/string`       | no       | Validator for string.
+| `struct.core/string-str`   | yes      | Validator for string like.
+| `struct.core/in-range`     | no       | Validator for a number range.
+| `struct.core/member`       | no       | Validator for check if a value is member of coll.
+| `struct.core/positive`     | no       | Validator for positive number.
+| `struct.core/negative`     | no       | Validator for negative number.
+| `struct.core/function`     | no       | Validator for IFn interface.
+| `struct.core/vector`       | no       | Validator for clojure vector.
+| `struct.core/map`          | no       | Validator for clojure map.
+| `struct.core/set`          | no       | Validator for clojure set.
+| `struct.core/coll`         | no       | Validator for clojure coll.
+| `struct.core/every`        | no       | Validator to check if pred match for every item in coll.
+| `struct.core/identical-to` | no       | Validator to check that value is identical to other field.
+| `struct.core/min-count`    | no       | Validator to check that value is has at least a minimum number of characters.
+| `struct.core/max-count`    | no       | Validator to check that value is not larger than a maximum number of characters.
 |===========================================================================
 
 Additional notes:

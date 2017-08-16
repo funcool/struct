@@ -39,6 +39,16 @@
     (t/is (= [nil nil] result2))
     (t/is (= ["this field is mandatory" nil] result3))))
 
+(t/deftest test-parametric-validators
+  (let [result1 (st/validate
+                  {:name "foo"}
+                  {:name [[st/min-count 4]]})
+        result2 (st/validate
+                  {:name "bar"}
+                  {:name [[st/max-count 2]]})]
+    (t/is (= {:name "less than the minimum"} (first result1)))
+    (t/is (= {:name "longer than the maximum"} (first result2)))))
+
 (t/deftest test-simple-validators-with-vector-schema
   (let [scheme [[:max st/number]
                 [:scope st/string]]

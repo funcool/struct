@@ -1,5 +1,11 @@
 # Changelog #
 
+## Version 1.1.1 ##
+
+Date: 2017-08-13
+
+- Add count validators
+
 ## Version 1.0.0 ##
 
 Date: 2016-06-24
