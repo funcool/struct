@@ -1,5 +1,13 @@
 # Changelog #
 
+## Version 1.2.0 ##
+
+Date: 2017-01-11
+
+- Allow `number-str` and `integer-str` receive already coerced values.
+- Minor code cleaning.
+- Update dependencies.
+
 ## Version 1.1.0 ##
 
 Date: 2017-08-16
