@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="generator" content="Asciidoctor 1.5.5">
+<meta name="generator" content="Asciidoctor 1.5.6.1">
 <title>struct - validation library for Clojure(Script)</title>
 <style>
 .listingblock .pygments .hll { background-color: #ffffcc }
@@ -156,7 +156,7 @@
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">[</span><span class="tok-nv">funcool/struct</span> <span class="tok-s">&quot;1.1.0&quot;</span><span class="tok-p">]</span></code></pre>
+<pre class="pygments highlight"><code data-lang="clojure"><span></span><span class="tok-p">[</span><span class="tok-nv">funcool/struct</span> <span class="tok-s">&quot;1.2.0&quot;</span><span class="tok-p">]</span></code></pre>
 </div>
 </div>
 </div>
@@ -172,7 +172,7 @@
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-nf">require</span> <span class="tok-o">&#39;</span><span class="tok-p">[</span><span class="tok-nv">struct.core</span> <span class="tok-ss">:as</span> <span class="tok-nv">st</span><span class="tok-p">])</span></code></pre>
+<pre class="pygments highlight"><code data-lang="clojure"><span></span><span class="tok-p">(</span><span class="tok-nf">require</span> <span class="tok-o">&#39;</span><span class="tok-p">[</span><span class="tok-nv">struct.core</span> <span class="tok-ss">:as</span> <span class="tok-nv">st</span><span class="tok-p">])</span></code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -180,7 +180,7 @@
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-k">def </span><span class="tok-nv">+scheme+</span>
+<pre class="pygments highlight"><code data-lang="clojure"><span></span><span class="tok-p">(</span><span class="tok-k">def </span><span class="tok-nv">+scheme+</span>
   <span class="tok-p">{</span><span class="tok-ss">:name</span> <span class="tok-p">[</span><span class="tok-nv">st/required</span> <span class="tok-nv">st/string</span><span class="tok-p">]</span>
    <span class="tok-ss">:year</span> <span class="tok-p">[</span><span class="tok-nv">st/required</span> <span class="tok-nv">st/number</span><span class="tok-p">]})</span></code></pre>
 </div>
@@ -197,7 +197,7 @@ matters:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-k">def </span><span class="tok-nv">+scheme+</span>
+<pre class="pygments highlight"><code data-lang="clojure"><span></span><span class="tok-p">(</span><span class="tok-k">def </span><span class="tok-nv">+scheme+</span>
   <span class="tok-p">[[</span><span class="tok-ss">:name</span> <span class="tok-nv">st/required</span> <span class="tok-nv">st/string</span><span class="tok-p">]</span>
    <span class="tok-p">[</span><span class="tok-ss">:year</span> <span class="tok-nv">st/required</span> <span class="tok-nv">st/number</span><span class="tok-p">]])</span></code></pre>
 </div>
@@ -212,7 +212,7 @@ will reported. If you want make the value mandatory, you should use a specific
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-nb">-&gt; </span><span class="tok-p">{</span><span class="tok-ss">:name</span> <span class="tok-s">&quot;Blood of Elves&quot;</span> <span class="tok-ss">:year</span> <span class="tok-mi">1994</span><span class="tok-p">}</span>
+<pre class="pygments highlight"><code data-lang="clojure"><span></span><span class="tok-p">(</span><span class="tok-nb">-&gt; </span><span class="tok-p">{</span><span class="tok-ss">:name</span> <span class="tok-s">&quot;Blood of Elves&quot;</span> <span class="tok-ss">:year</span> <span class="tok-mi">1994</span><span class="tok-p">}</span>
     <span class="tok-p">(</span><span class="tok-nf">st/validate</span> <span class="tok-nv">+scheme+</span><span class="tok-p">))</span>
 <span class="tok-c1">;; =&gt; [nil {:name &quot;Blood of Elves&quot; :year 1994}]</span>
 
@@ -231,7 +231,7 @@ for that purpose:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-nf">st/valid?</span> <span class="tok-p">{</span><span class="tok-ss">:year</span> <span class="tok-s">&quot;1994&quot;</span><span class="tok-p">}</span> <span class="tok-nv">+scheme+</span><span class="tok-p">)</span>
+<pre class="pygments highlight"><code data-lang="clojure"><span></span><span class="tok-p">(</span><span class="tok-nf">st/valid?</span> <span class="tok-p">{</span><span class="tok-ss">:year</span> <span class="tok-s">&quot;1994&quot;</span><span class="tok-p">}</span> <span class="tok-nv">+scheme+</span><span class="tok-p">)</span>
 <span class="tok-c1">;; =&gt; false</span></code></pre>
 </div>
 </div>
@@ -241,7 +241,7 @@ can be changed passing an additional flag as the third argument:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-nb">-&gt; </span><span class="tok-p">{</span><span class="tok-ss">:name</span> <span class="tok-s">&quot;Blood of Elves&quot;</span> <span class="tok-ss">:year</span> <span class="tok-mi">1994</span> <span class="tok-ss">:foo</span> <span class="tok-s">&quot;bar&quot;</span><span class="tok-p">}</span>
+<pre class="pygments highlight"><code data-lang="clojure"><span></span><span class="tok-p">(</span><span class="tok-nb">-&gt; </span><span class="tok-p">{</span><span class="tok-ss">:name</span> <span class="tok-s">&quot;Blood of Elves&quot;</span> <span class="tok-ss">:year</span> <span class="tok-mi">1994</span> <span class="tok-ss">:foo</span> <span class="tok-s">&quot;bar&quot;</span><span class="tok-p">}</span>
     <span class="tok-p">(</span><span class="tok-nf">st/validate</span> <span class="tok-nv">+scheme+</span><span class="tok-p">))</span>
 <span class="tok-c1">;; =&gt; [nil {:name &quot;Blood of Elves&quot; :year 1994 :foo &quot;bar&quot;}]</span>
 
@@ -256,7 +256,7 @@ key part the proper path to the neested data structure:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-k">def </span><span class="tok-nv">+scheme+</span>
+<pre class="pygments highlight"><code data-lang="clojure"><span></span><span class="tok-p">(</span><span class="tok-k">def </span><span class="tok-nv">+scheme+</span>
   <span class="tok-p">{[</span><span class="tok-ss">:a</span> <span class="tok-ss">:b</span><span class="tok-p">]</span> <span class="tok-nv">st/integer</span>
    <span class="tok-p">[</span><span class="tok-ss">:c</span> <span class="tok-ss">:d</span><span class="tok-p">]</span> <span class="tok-nv">st/string</span><span class="tok-p">})</span>
 
@@ -274,7 +274,7 @@ key part the proper path to the neested data structure:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-k">def </span><span class="tok-nv">schema</span> <span class="tok-p">{</span><span class="tok-ss">:num</span> <span class="tok-p">[[</span><span class="tok-nv">st/in-range</span> <span class="tok-mi">10</span> <span class="tok-mi">20</span><span class="tok-p">]]})</span>
+<pre class="pygments highlight"><code data-lang="clojure"><span></span><span class="tok-p">(</span><span class="tok-k">def </span><span class="tok-nv">schema</span> <span class="tok-p">{</span><span class="tok-ss">:num</span> <span class="tok-p">[[</span><span class="tok-nv">st/in-range</span> <span class="tok-mi">10</span> <span class="tok-mi">20</span><span class="tok-p">]]})</span>
 
 <span class="tok-p">(</span><span class="tok-nf">st/validate</span> <span class="tok-p">{</span><span class="tok-ss">:num</span> <span class="tok-mi">21</span><span class="tok-p">}</span> <span class="tok-nv">schema</span><span class="tok-p">)</span>
 <span class="tok-c1">;; =&gt; [{:num &quot;not in range&quot;} {}]</span>
@@ -297,7 +297,7 @@ can do it:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-k">def </span><span class="tok-nv">schema</span>
+<pre class="pygments highlight"><code data-lang="clojure"><span></span><span class="tok-p">(</span><span class="tok-k">def </span><span class="tok-nv">schema</span>
   <span class="tok-p">{</span><span class="tok-ss">:num</span> <span class="tok-p">[[</span><span class="tok-nv">st/in-range</span> <span class="tok-mi">10</span> <span class="tok-mi">20</span> <span class="tok-ss">:message</span> <span class="tok-s">&quot;errors.not-in-range&quot;</span><span class="tok-p">]]})</span>
 
 <span class="tok-p">(</span><span class="tok-nf">st/validate</span> <span class="tok-p">{</span><span class="tok-ss">:num</span> <span class="tok-mi">21</span><span class="tok-p">}</span> <span class="tok-nv">schema</span><span class="tok-p">)</span>
@@ -315,7 +315,7 @@ see some code:</p>
 <div class="listingblock">
 <div class="title">Example attaching custom coercions</div>
 <div class="content">
-<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-k">def </span><span class="tok-nv">schema</span>
+<pre class="pygments highlight"><code data-lang="clojure"><span></span><span class="tok-p">(</span><span class="tok-k">def </span><span class="tok-nv">schema</span>
   <span class="tok-p">{</span><span class="tok-ss">:year</span> <span class="tok-p">[[</span><span class="tok-nv">st/integer</span> <span class="tok-ss">:coerce</span> <span class="tok-nv">str</span><span class="tok-p">]]})</span>
 
 <span class="tok-p">(</span><span class="tok-nf">st/validate</span> <span class="tok-p">{</span><span class="tok-ss">:year</span> <span class="tok-mi">1994</span><span class="tok-p">}</span> <span class="tok-nv">schema</span><span class="tok-p">))</span>
@@ -333,7 +333,7 @@ that arrive as strings but need to be converted to the appropriate type:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-k">def </span><span class="tok-nv">schema</span> <span class="tok-p">{</span><span class="tok-ss">:year</span> <span class="tok-p">[</span><span class="tok-nv">st/required</span> <span class="tok-nv">st/integer-str</span><span class="tok-p">]</span>
+<pre class="pygments highlight"><code data-lang="clojure"><span></span><span class="tok-p">(</span><span class="tok-k">def </span><span class="tok-nv">schema</span> <span class="tok-p">{</span><span class="tok-ss">:year</span> <span class="tok-p">[</span><span class="tok-nv">st/required</span> <span class="tok-nv">st/integer-str</span><span class="tok-p">]</span>
              <span class="tok-ss">:id</span> <span class="tok-p">[</span><span class="tok-nv">st/required</span> <span class="tok-nv">st/uuid-str</span><span class="tok-p">]})</span>
 
 <span class="tok-p">(</span><span class="tok-nf">st/validate</span> <span class="tok-p">{</span><span class="tok-ss">:year</span> <span class="tok-s">&quot;1994&quot;</span>
@@ -349,7 +349,7 @@ an exception will be raised using <code>ex-info</code> clojure facility:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-nf">st/validate!</span> <span class="tok-p">{</span><span class="tok-ss">:year</span> <span class="tok-s">&quot;1994&quot;</span> <span class="tok-ss">:id</span> <span class="tok-s">&quot;543e7472-6624-4cb5-b65e-f3c341843d0f&quot;</span><span class="tok-p">}</span> <span class="tok-nv">schema</span><span class="tok-p">)</span>
+<pre class="pygments highlight"><code data-lang="clojure"><span></span><span class="tok-p">(</span><span class="tok-nf">st/validate!</span> <span class="tok-p">{</span><span class="tok-ss">:year</span> <span class="tok-s">&quot;1994&quot;</span> <span class="tok-ss">:id</span> <span class="tok-s">&quot;543e7472-6624-4cb5-b65e-f3c341843d0f&quot;</span><span class="tok-p">}</span> <span class="tok-nv">schema</span><span class="tok-p">)</span>
 <span class="tok-c1">;; =&gt; {:year 1994, :id #uuid &quot;543e7472-6624-4cb5-b65e-f3c341843d0f&quot;}</span></code></pre>
 </div>
 </div>
@@ -531,7 +531,7 @@ hash-maps. For example, this is how the builtin <code>integer</code> validator i
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-k">def </span><span class="tok-nv">integer</span>
+<pre class="pygments highlight"><code data-lang="clojure"><span></span><span class="tok-p">(</span><span class="tok-k">def </span><span class="tok-nv">integer</span>
   <span class="tok-p">{</span><span class="tok-ss">:message</span> <span class="tok-s">&quot;must be a integer&quot;</span>
    <span class="tok-ss">:optional</span> <span class="tok-nv">true</span>
    <span class="tok-ss">:validate</span> <span class="tok-nv">integer?</span><span class="tok-p">}))</span></code></pre>
@@ -543,7 +543,7 @@ should be present with the value <code>true</code>. Let see the <code>identical-
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-k">def </span><span class="tok-nv">identical-to</span>
+<pre class="pygments highlight"><code data-lang="clojure"><span></span><span class="tok-p">(</span><span class="tok-k">def </span><span class="tok-nv">identical-to</span>
   <span class="tok-p">{</span><span class="tok-ss">:message</span> <span class="tok-s">&quot;does not match&quot;</span>
    <span class="tok-ss">:optional</span> <span class="tok-nv">true</span>
    <span class="tok-ss">:state</span> <span class="tok-nv">true</span>
@@ -580,7 +580,7 @@ contributions. Just open an issue or pull request.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="text">git clone https://github.com/funcool/struct</code></pre>
+<pre class="pygments highlight"><code data-lang="text"><span></span>git clone https://github.com/funcool/struct</code></pre>
 </div>
 </div>
 </div>
@@ -594,7 +594,7 @@ contributions. Just open an issue or pull request.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="text">lein test</code></pre>
+<pre class="pygments highlight"><code data-lang="text"><span></span>lein test</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -602,7 +602,7 @@ contributions. Just open an issue or pull request.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="text">./scripts/build
+<pre class="pygments highlight"><code data-lang="text"><span></span>./scripts/build
 node out/tests.js</code></pre>
 </div>
 </div>
@@ -649,7 +649,7 @@ For more information, please refer to &lt;http://unlicense.org/&gt;</pre>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2017-08-16 16:41:07 CEST
+Last updated 2018-01-11 11:58:19 CET
 </div>
 </div>
 </body>
