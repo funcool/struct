@@ -128,6 +128,17 @@
         [errors data] (st/validate input scheme)]
     (t/is (= {:a 2.3 :b 3} data))))
 
+(t/deftest test-validation-neested-data-in-a-vector
+  (let [scheme {:a [st/vector [st/every number?]]}
+        input1 {:a [1 2 3 4]}
+        input2 {:a [1 2 3 4 "a"]}
+        [errors1 data1] (st/validate input1 scheme)
+        [errors2 data2] (st/validate input2 scheme)]
+    (t/is (= data1 input1))
+    (t/is (= errors1 nil))
+    (t/is (= data2 {}))
+    (t/is (= errors2 {:a "must match the predicate"}))))
+
 ;; --- Entry point
 
 #?(:cljs
