@@ -213,31 +213,20 @@
 (def number-str
   {:message "must be a number"
    :optional true
-   :validate #(and (string? %)
-                   (re-seq #"^[-+]?[0-9]*\.?[0-9]+$" %))
-   :coerce #?(:cljs #(js/parseFloat %)
-              :clj #(Double/parseDouble %))})
+   :validate #(or (number? %) (and (string? %) (str/numeric? %)))
+   :coerce #(if (number? %) % (str/parse-number %))})
 
 (def integer
-  (letfn [(validate [v]
-            #?(:cljs (js/Number.isInteger v)
-               :clj (integer? v)))]
-    {:message "must be a integer"
-     :optional true
-     :validate validate}))
+  {:message "must be a integer"
+   :optional true
+   :validate #?(:cljs #(js/Number.isInteger %)
+                :clj #(integer? %))})
 
 (def integer-str
-  (letfn [(coerce [v]
-            #?(:clj (Long/parseLong v)
-               :cljs (let [result (js/parseInt v 10)]
-                       (if (js/isNaN result) v result))))
-          (validate [v]
-            (and (string? v)
-                 (re-seq #"^[-+]?\d+$" v)))]
-    {:message "must be a long"
-     :optional true
-     :validate validate
-     :coerce coerce}))
+  {:message "must be a long"
+   :optional true
+   :validate #(or (number? %) (and (string? %) (str/numeric? %)))
+   :coerce #(if (number? %) (int %) (str/parse-int %))})
 
 (def boolean
   {:message "must be a boolean"
@@ -245,15 +234,11 @@
    :validate #(or (= false %) (= true %))})
 
 (def boolean-str
-  (letfn [(validate [v]
-            (and (string? v)
-                 (re-seq #"^(?:t|true|false|f|0|1)$" v)))
-          (coerce [v]
-            (contains? #{"t" "true" "1"} v))]
-    {:message "must be a boolean"
-     :optional true
-     :validate validate
-     :coerce coerce}))
+  {:message "must be a boolean"
+   :optional true
+   :validate #(and (string? %)
+                   (re-seq #"^(?:t|true|false|f|0|1)$" %))
+   :coerce #(contains? #{"t" "true" "1"} %)})
 
 (def string
   {:message "must be a string"
@@ -266,13 +251,12 @@
    :coerce str})
 
 (def in-range
-  (letfn [(validate [v from to]
-            {:pre [(number? from) (number? to)]}
-            (and (number? v)
-                 (<= from v to)))]
-    {:message "not in range"
-     :optional true
-     :validate validate}))
+  {:message "not in range"
+   :optional true
+   :validate #(and (number? %1)
+                   (number? %2)
+                   (number? %3)
+                   (<= %2 %1 %3))})
 
 (def positive
   {:message "must be positive"

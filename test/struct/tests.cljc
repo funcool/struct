@@ -121,10 +121,20 @@
     (t/is (= errors (first result)))
     (t/is (= {:scope "foobar"} (second result)))))
 
+(t/deftest test-coersion-with-valid-values
+  (let [scheme {:a st/number-str
+                :b st/integer-str}
+        input {:a 2.3 :b 3.3}
+        [errors data] (st/validate input scheme)]
+    (t/is (= {:a 2.3 :b 3} data))))
+
 ;; --- Entry point
 
-#?(:cljs (enable-console-print!))
-#?(:cljs (set! *main-cli-fn* #(t/run-tests)))
+#?(:cljs
+   (do
+     (enable-console-print!)
+     (set! *main-cli-fn* #(t/run-tests))))
+
 #?(:cljs
    (defmethod t/report [:cljs.test/default :end-run-tests]
      [m]
