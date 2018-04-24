@@ -33,7 +33,7 @@
     ::nomsg
     (let [msg (:message step "errors.invalid")
           tr (:translate opts identity)]
-      (str/format (tr msg) (vec (:args step))))))
+      (apply str/format (tr msg) (vec (:args step))))))
 
 (def ^:const ^:private opts-params
   #{:coerce :message :optional})
@@ -251,7 +251,7 @@
    :coerce str})
 
 (def in-range
-  {:message "not in range"
+  {:message "not in range %s and %s"
    :optional true
    :validate #(and (number? %1)
                    (number? %2)
@@ -315,7 +315,7 @@
   (letfn [(validate [v minimum]
             {:pre [(number? minimum)]}
             (>= (count v) minimum))]
-    {:message "less than the minimum"
+    {:message "less than the minimum %s"
      :optional true
      :validate validate}))
 
@@ -323,6 +323,6 @@
   (letfn [(validate [v maximum]
             {:pre [(number? maximum)]}
             (<= (count v) maximum))]
-    {:message "longer than the maximum"
+    {:message "longer than the maximum %s"
      :optional true
      :validate validate}))
