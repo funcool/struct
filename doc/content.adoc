@@ -168,6 +168,18 @@ can do it:
 ;; => [{:num "errors.not-in-range"} {}]
 ----
 
+A message can contains format wildcards `%s`, these wildcards will be replaced by `args` of validator, e.g.:
+
+[source, clojure]
+----
+(def schema
+  {:age [[st/in-range 18 26 :message "The age must be between %s and %s"]]})
+
+(st/validate {:age 30} schema)
+;; => [{:age "The age must be between 18 and 26"} {}]
+
+----
+
 
 === Data coercions
 
