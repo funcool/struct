@@ -46,8 +46,8 @@
         result2 (st/validate
                   {:name "bar"}
                   {:name [[st/max-count 2]]})]
-    (t/is (= {:name "less than the minimum"} (first result1)))
-    (t/is (= {:name "longer than the maximum"} (first result2)))))
+    (t/is (= {:name "less than the minimum 4"} (first result1)))
+    (t/is (= {:name "longer than the maximum 2"} (first result2)))))
 
 (t/deftest test-simple-validators-with-vector-schema
   (let [scheme [[:max st/number]
@@ -138,6 +138,12 @@
     (t/is (= errors1 nil))
     (t/is (= data2 {}))
     (t/is (= errors2 {:a "must match the predicate"}))))
+
+(t/deftest test-in-range-validator
+  (t/is (= {:age "not in range 18 and 26"}
+           (-> {:age 17}
+               (st/validate {:age [[st/in-range 18 26]]})
+               first))))
 
 ;; --- Entry point
 
