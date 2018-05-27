@@ -119,8 +119,8 @@
 (defn validate
   "Validate data with specified schema.
 
-  This function by default strips all data that does not defined in
-  schema, but this behavior can be changed passing `{:strip false}`
+  This function by default strips all data that are not defined in
+  schema, but this behavior can be changed by passing `{:strip false}`
   as third argument."
   ([data schema]
    (validate data schema nil))
