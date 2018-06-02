@@ -1,5 +1,12 @@
 # Changelog #
 
+## Version 1.3.0 ##
+
+Date: 2018-06-02
+
+- Fix message formatting.
+
+
 ## Version 1.2.0 ##
 
 Date: 2017-01-11
