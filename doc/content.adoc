@@ -298,6 +298,21 @@ should be present with the value `true`. Let see the `identical-to` validator as
 Validators that access the state receive an additional argument with the state for validator
 function.
 
+=== Translating validation messages
+
+`struct.core/validate` accepts a third options argument where a function can be passed in with the `:translate` key like the following:
+
+[source,clojure]
+----
+(st/validate {:year "1994"
+              :id "543e7472-6624-4cb5-b65e-f3c341843d0f"}
+             schema
+             {:translate (fn [message] (clojure.string/uppercase message)))
+----
+
+The translation function accepts the `:message` of the schma upon validation failure.
+This allows easy integration with an i18n library such as tempura if you privide a keyword for the schema's `:message` that in turn maps to the localised message in the dictionary.
+
 == Developers Guide
 
 === Contributing
