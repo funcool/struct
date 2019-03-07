@@ -43,14 +43,15 @@
 
 (defn- build-step
   [key item]
-  (if (vector? item)
-    (let [validator (first item)
-          result (split-with notopts? (rest item))
-          args (first result)
-          opts (apply hash-map (second result))]
-      (merge (assoc validator :args args :path [key])
-             (select-keys opts [:coerce :message :optional])))
-    (assoc item :args [] :path (if (vector? key) key [key]))))
+  (letfn [(coerce-key [key] (if (vector? key) key [key]))]
+    (if (vector? item)
+      (let [validator (first item)
+            result (split-with notopts? (rest item))
+            args (first result)
+            opts (apply hash-map (second result))]
+        (merge (assoc validator :args args :path (coerce-key key))
+               (select-keys opts [:coerce :message :optional])))
+      (assoc item :args [] :path (coerce-key key)))))
 
 (defn- normalize-step-map-entry
   [acc key value]
