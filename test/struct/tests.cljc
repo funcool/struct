@@ -128,7 +128,7 @@
         [errors data] (st/validate input scheme)]
     (t/is (= {:a 2.3 :b 3} data))))
 
-(t/deftest test-validation-neested-data-in-a-vector
+(t/deftest test-validation-nested-data-in-a-vector
   (let [scheme {:a [st/vector [st/every number?]]}
         input1 {:a [1 2 3 4]}
         input2 {:a [1 2 3 4 "a"]}
@@ -144,6 +144,24 @@
            (-> {:age 17}
                (st/validate {:age [[st/in-range 18 26]]})
                first))))
+
+(t/deftest test-honor-nested-data
+  (let [scheme          {[:a :b] [st/required
+                                  st/string
+                                  [st/min-count 2 :message "foobar"]
+                                  [st/max-count 5]]}
+        input1          {:a {:b "abcd"}}
+        input2          {:a {:b "abcdefgh"}}
+        input3          {:a {:b "a"}}
+        [errors1 data1] (st/validate input1 scheme)
+        [errors2 data2] (st/validate input2 scheme)
+        [errors3 data3] (st/validate input3 scheme)]
+    (t/is (= data1 input1))
+    (t/is (= errors1 nil))
+    (t/is (= data2 {}))
+    (t/is (= errors2 {:a {:b "longer than the maximum 5"}}))
+    (t/is (= data3 {}))
+    (t/is (= errors3 {:a {:b "foobar"}}))))
 
 ;; --- Entry point
 
