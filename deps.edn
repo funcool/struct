@@ -1,0 +1,20 @@
+{:deps {funcool/cuerdas {:mvn/version "2.2.0"}}
+ :paths ["src"]
+ :aliases
+ {:dev
+  {:extra-deps {org.clojure/clojurescript {:mvn/version "1.10.516"}
+                ;; org.clojure/clojure {:mvn/version "1.10.0"}
+                com.bhauman/rebel-readline-cljs {:mvn/version "0.1.4"}
+                com.bhauman/rebel-readline {:mvn/version "0.1.4"}
+                com.bhauman/figwheel-main {:mvn/version "0.2.0"}
+                eftest/eftest {:mvn/version "0.5.7"}}
+   :extra-paths ["test"]}
+
+  :ancient {:main-opts ["-m" "deps-ancient.deps-ancient"]
+            :extra-deps {deps-ancient {:mvn/version "RELEASE"}}}
+
+  :jar {:extra-deps {seancorfield/depstar {:mvn/version "RELEASE"}}
+        :main-opts ["-m" "hf.depstar.jar"]}
+
+  :repl {:main-opts  ["-m" "rebel-readline.main"]}
+  }}
