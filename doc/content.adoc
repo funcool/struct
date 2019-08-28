@@ -101,8 +101,6 @@ The error has the following structure:
 [source, clojure]
 ----
 {:type :struct.core/required,
- :optional false, 
- :validate #object[function],
  :message nil,
  :value nil}
 ----

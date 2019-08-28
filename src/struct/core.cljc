@@ -103,12 +103,12 @@
 
 (defn- format-error
   [result value]
-  (let [validator (:validator result)
-        msg (:message validator nil)
-        msg (if (fn? msg) (msg validator) msg)]
-    (assoc validator
-           :message msg
-           :value value)))
+  (let [vdata (:validator result)
+        msg (:message vdata nil)
+        msg (if (fn? msg) (msg vdata) msg)]
+    {:type (:type vdata)
+     :message msg
+     :value value}))
 
 (defn- impl-validate
   [data items]
