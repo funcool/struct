@@ -111,7 +111,7 @@
      :value value}))
 
 (defn- impl-validate
-  [data items]
+  [items data]
   (reduce (fn [_ {:keys [path vfn] :as item}]
             (let [value (get-in data path)]
               (or (vfn data value)
@@ -120,7 +120,7 @@
           items))
 
 (defn- impl-validate-and-coerce
-  [data items opts]
+  [items data opts]
   (reduce (fn [acc {:keys [path vfn cfn] :as item}]
             (let [value (get-in data path)
                   result (vfn data value)]
@@ -170,18 +170,18 @@
   This function by default strips all data that are not defined in
   schema, but this behavior can be changed by passing `{:strip false}`
   as third argument."
-  ([data schema]
-   (validate data schema nil))
-  ([data schema opts]
+  ([schema data]
+   (validate schema data nil))
+  ([schema data opts]
    (let [schema (resolve-schema schema)
-         result (impl-validate-and-coerce data (::items schema) opts)]
+         result (impl-validate-and-coerce (::items schema) data opts)]
      [(:errors result)
       (:data result)])))
 
 (defn valid?
-  [data schema]
+  [schema data]
   (let [schema (resolve-schema schema)
-        result (impl-validate data (::items schema))]
+        result (impl-validate (::items schema) data)]
     (:valid? result)))
 
 (defn validate!
@@ -192,10 +192,10 @@
   This function accepts the same parameters as `validate` with
   an additional `:msg` that serves for customize the exception
   message."
-  ([data schema]
-   (validate! data schema nil))
-  ([data schema {:keys [message] :or {message "Schema validation error"} :as opts}]
-   (let [[errors data] (validate data schema opts)]
+  ([schema data]
+   (validate! schema data nil))
+  ([schema data {:keys [message] :or {message "Schema validation error"} :as opts}]
+   (let [[errors data] (validate schema data opts)]
      (if (seq errors)
        (throw (ex-info message errors))
        data))))

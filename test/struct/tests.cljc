@@ -13,7 +13,7 @@
   (let [scheme {:max st/number
                 :scope st/string}
         input {:scope "foobar"}
-        result (st/validate input scheme)]
+        result (st/validate scheme input)]
     (t/is (= nil (first result)))
     (t/is (= input (second result)))))
 
@@ -21,7 +21,7 @@
   (let [scheme {:max st/number
                 :scope st/string}
         input {:scope "foobar" :max "d"}
-        [error data] (st/validate input scheme)]
+        [error data] (st/validate scheme input)]
     (t/is (map? error))
     (t/is (= (get-in error [:max :type]) ::st/number))
     (t/is (map? data))
@@ -31,8 +31,8 @@
   (let [scheme {:max [st/required number?]}
         input1 {:max "foo"}
         input2 {:max 2}
-        [error1 data1] (st/validate input1 scheme)
-        [error2 data2] (st/validate input2 scheme)]
+        [error1 data1] (st/validate scheme input1)
+        [error2 data2] (st/validate scheme input2)]
 
     (t/is (map? error1))
     (t/is (map? data1))
@@ -47,17 +47,15 @@
   (let [scheme {[:a :b] st/number
                 [:c :d :e] st/string}
         input {:a {:b "foo"} :c {:d {:e "bar"}}}
-        [errors data] (st/validate input scheme)]
+        [errors data] (st/validate scheme input)]
     (t/is (map? errors))
     (t/is (= (get-in errors [:a :b :type]) ::st/number))
     (t/is (map? data))
     (t/is (= (get-in data [:c :d :e]) "bar"))))
 
 (t/deftest test-parametric-validators
-  (let [[errors1 data1] (st/validate {:name "foo"}
-                                     {:name [[st/min-count 4]]})
-        [errors2 data2] (st/validate {:name "bar"}
-                                     {:name [[st/max-count 2]]})]
+  (let [[errors1 data1] (st/validate {:name [[st/min-count 4]]} {:name "foo"})
+        [errors2 data2] (st/validate {:name [[st/max-count 2]]} {:name "bar"})]
     (t/is (map? data1))
     (t/is (map? data2))
     (t/is (empty? data1))
@@ -71,7 +69,7 @@
   (let [scheme [[:max st/number]
                 [:scope st/string]]
         input {:scope "foobar" :max "d"}
-        [errors data] (st/validate input scheme)]
+        [errors data] (st/validate scheme input)]
 
     (t/is (map? errors))
     (t/is (= (get-in errors [:max :type]) ::st/number))
@@ -82,7 +80,7 @@
   (let [scheme [[:max [st/number :message (constantly "a")]]
                 [:scope [st/string :message (constantly "b")]]]
         input {:scope "foobar" :max "d"}
-        [errros data] (st/validate input scheme)]
+        [errros data] (st/validate scheme input)]
     (t/is (map? errros))
     (t/is (map? data))
     (t/is (= (get-in errros [:max :type]) ::st/number))
@@ -94,7 +92,7 @@
                 [:password2 [st/identical-to :password1]]]
         input {:password1 "foobar"
                :password2 "foobar."}
-        [errors data] (st/validate input scheme)]
+        [errors data] (st/validate scheme input)]
     (t/is (map? errors))
     (t/is (map? data))
     (t/is (= (get-in errors [:password2 :type]) ::st/identical-to))
@@ -105,7 +103,7 @@
                 [:password2 [st/identical-to :password1]]]
         input {:password1 "foobar"
                :password2 "foobar"}
-        [errors data] (st/validate input scheme)]
+        [errors data] (st/validate scheme input)]
     (t/is (nil? errors))
     (t/is (map? data))
     (t/is (= (get data :password1) "foobar"))
@@ -115,7 +113,7 @@
   (let [scheme {:max [st/required st/number]
                 :scope st/string}
         input {:scope "foobar"}
-        [errors data] (st/validate input scheme)]
+        [errors data] (st/validate scheme input)]
     (t/is (map? errors))
     (t/is (map? data))
     (t/is (= (get-in errors [:max :type]) ::st/required))
@@ -125,7 +123,7 @@
   (let [scheme {:max [st/required st/integer-str]
                 :scope [[st/string :coerce (constantly :foo)]]}
         input {:max "2" :scope "foobar"}
-        [errors data] (st/validate input scheme)]
+        [errors data] (st/validate scheme input)]
 
     (t/is (nil? errors))
     (t/is (map? data))
@@ -136,8 +134,8 @@
   (let [scheme {:a [st/vector [st/every number?]]}
         input1 {:a [1 2 3 4]}
         input2 {:a [1 2 3 4 "a"]}
-        [errors1 data1] (st/validate input1 scheme)
-        [errors2 data2] (st/validate input2 scheme)]
+        [errors1 data1] (st/validate scheme input1)
+        [errors2 data2] (st/validate scheme input2)]
 
 
     (t/is (map? data1))
