@@ -1,20 +1,19 @@
-{:deps {funcool/cuerdas {:mvn/version "2.2.0"}}
- :paths ["src"]
+{:paths ["src"]
  :aliases
  {:dev
-  {:extra-deps {org.clojure/clojurescript {:mvn/version "1.10.516"}
-                ;; org.clojure/clojure {:mvn/version "1.10.0"}
+  {:extra-deps {org.clojure/clojurescript {:mvn/version "1.10.520"}
+                org.clojure/clojure {:mvn/version "1.10.1"}
                 com.bhauman/rebel-readline-cljs {:mvn/version "0.1.4"}
                 com.bhauman/rebel-readline {:mvn/version "0.1.4"}
-                com.bhauman/figwheel-main {:mvn/version "0.2.0"}
-                eftest/eftest {:mvn/version "0.5.7"}}
+                org.clojure/tools.namespace {:mvn/version "0.3.1"}
+                criterium {:mvn/version "0.4.5"}}
    :extra-paths ["test"]}
+  :deploy
+  {:extra-deps {badigeon/badigeon {:git/url "https://github.com/EwenG/badigeon.git"
+                                   :sha "db25a8f7053dec65afeb7fb0d1a5351dcdbe78bd"
+                                   :tag "0.0.8"}}}
 
   :ancient {:main-opts ["-m" "deps-ancient.deps-ancient"]
             :extra-deps {deps-ancient {:mvn/version "RELEASE"}}}
 
-  :jar {:extra-deps {seancorfield/depstar {:mvn/version "RELEASE"}}
-        :main-opts ["-m" "hf.depstar.jar"]}
-
-  :repl {:main-opts  ["-m" "rebel-readline.main"]}
   }}

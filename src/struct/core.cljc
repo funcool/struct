@@ -1,23 +1,21 @@
 (ns struct.core
   (:refer-clojure :exclude [keyword uuid vector boolean long map set])
-  (:require [cuerdas.core :as str]))
+  (:require [struct.util :as util])
+  #?(:cljs (:require-macros struct.core)))
 
-;; --- Impl details
+#?(:clj (set! *warn-on-reflection* true)
+   :cljs (set! *warn-on-infer* true))
+
 
 (def ^:private map' #?(:cljs cljs.core/map
                        :clj clojure.core/map))
 
-(defn- apply-validation
-  [step data value]
-  (if-let [validate (:validate step nil)]
-    (let [args (:args step [])]
-      (if (:state step)
-        (apply validate data value args)
-        (apply validate value args)))
-    true))
+(def ^:private vector' #?(:cljs cljs.core/vector
+                          :clj clojure.core/vector))
+;; --- Impl details
 
 (defn- dissoc-in
-  [m [k & ks :as keys]]
+  [m [k & ks]]
   (if ks
     (if-let [nextmap (get m k)]
       (let [newmap (dissoc-in nextmap ks)]
@@ -27,95 +25,144 @@
       m)
     (dissoc m k)))
 
-(defn- prepare-message
-  [opts step]
-  (if (::nomsg opts)
-    ::nomsg
-    (let [msg (:message step "errors.invalid")
-          tr (:translate opts identity)]
-      (apply str/format (tr msg) (vec (:args step))))))
-
-(def ^:const ^:private opts-params
-  #{:coerce :message :optional})
+(def ^:private opts-params
+  #{:coerce :message :optional :type})
 
 (def ^:private notopts?
   (complement opts-params))
 
-(defn- build-step
-  [key item]
-  (letfn [(coerce-key [key] (if (vector? key) key [key]))]
-    (if (vector? item)
-      (let [validator (first item)
-            result (split-with notopts? (rest item))
-            args (first result)
-            opts (apply hash-map (second result))]
-        (merge (assoc validator :args args :path (coerce-key key))
-               (select-keys opts [:coerce :message :optional])))
-      (assoc item :args [] :path (coerce-key key)))))
-
-(defn- normalize-step-map-entry
-  [acc key value]
-  (if (vector? value)
-    (reduce #(conj! %1 (build-step key %2)) acc value)
-    (conj! acc (build-step key value))))
-
-(defn- normalize-step-entry
-  [acc [key & values]]
-  (reduce #(conj! %1 (build-step key %2)) acc values))
-
-(defn- build-steps
-  [schema]
+(defn- compile-validator
+  [data]
   (cond
-    (vector? schema)
-    (persistent!
-     (reduce normalize-step-entry (transient []) schema))
+    (map? data)
+    data
 
-    (map? schema)
-    (persistent!
-     (reduce-kv normalize-step-map-entry (transient []) schema))
+    (fn? data)
+    {:type ::custom-predicate
+     :optional true
+     :validate #(data %2)}
+
+    (vector? data)
+    (let [vdata (compile-validator (first data))
+          result (split-with notopts? (rest data))
+          args (first result)
+          opts (apply hash-map (second result))
+          ofn  (:validate vdata)
+          nfn  (fn [data val]
+                 (apply ofn data val args))]
+      (merge vdata opts {:validate nfn}))
 
     :else
-    (throw (ex-info "Invalid schema." {}))))
+    (throw (ex-info (pr-str "Invalid validator data:" data) {:data data}))))
 
-(defn- strip-values
-  [data steps]
-  (reduce (fn [acc path]
-            (let [value (get-in data path ::notexists)]
-              (if (not= value ::notexists)
-                (assoc-in acc path value)
-                acc)))
-          {}
-          (into #{} (map' :path steps))))
+(defn compile-validation-fn
+  [items]
+  (reduce (fn [acc item]
+            (let [validate-fn (:validate item)
+                  optional? (:optional item)]
+              (fn [data value]
+                (if (or (and (nil? value) optional?)
+                        (validate-fn data value))
+                  (acc data value)
+                  {:valid? false :validator item}))))
+          (constantly {:valid? true})
+          (reverse items)))
 
-(defn- validate-internal
-  [data steps opts]
-  (loop [skip #{}
-         errors nil
-         data data
-         steps steps]
-    (if-let [step (first steps)]
-      (let [path (:path step)
-            value (get-in data path)]
-        (cond
-          (contains? skip path)
-          (recur skip errors data (rest steps))
+(defn- compile-coerce-fn
+  [items]
+  (reduce (fn [acc item]
+            (let [coerce (:coerce item identity)]
+              #(coerce (acc %))))
+          identity
+          (reverse items)))
 
-          (and (nil? value) (:optional step))
-          (recur skip errors data (rest steps))
+(defn- compile-schema-entry
+  [[key & validators]]
+  (let [validators (mapv compile-validator validators)]
+    {:path (if (vector? key) key [key])
+     :vfn (compile-validation-fn validators)
+     :cfn (compile-coerce-fn validators)}))
 
-          (apply-validation step data value)
-          (let [value ((:coerce step identity) value)]
-            (recur skip errors (assoc-in data path value) (rest steps)))
+(defn- schema-map->vec
+  [schema]
+  (reduce-kv (fn [acc k v]
+               (if (vector? v)
+                 (conj acc (cons k v))
+                 (conj acc (cons k (list v)))))
+             []
+             schema))
 
-          :else
-          (let [message (prepare-message opts step)]
-            (recur (conj skip path)
-                   (assoc-in errors path message)
-                   (dissoc-in data path)
-                   (rest steps)))))
-      [errors data])))
+(defn compile-schema
+  [schema]
+  (let [items (cond
+                (vector? schema) (seq schema)
+                (map? schema) (schema-map->vec schema)
+                :else (throw (ex-info "Invalid schema." {})))]
+    {::schema true
+     ::items (mapv compile-schema-entry items)}))
+
+(defn- format-error
+  [result value]
+  (let [validator (:validator result)
+        msg (:message validator nil)
+        msg (if (fn? msg) (msg validator) msg)]
+    (assoc validator
+           :message msg
+           :value value)))
+
+(defn- impl-validate
+  [data items]
+  (reduce (fn [_ {:keys [path vfn] :as item}]
+            (let [value (get-in data path)]
+              (or (vfn data value)
+                  (reduced false))))
+          true
+          items))
+
+(defn- impl-validate-and-coerce
+  [data items opts]
+  (reduce (fn [acc {:keys [path vfn cfn] :as item}]
+            (let [value (get-in data path)
+                  result (vfn data value)]
+              (if (:valid? result)
+                (let [val (cfn value)]
+                  (if (nil? val)
+                    acc
+                    (update acc :data assoc-in path val)))
+                (let [validator (:validator result)
+                      error (format-error result value)]
+                  (-> acc
+                      (update :data dissoc-in path)
+                      (update :errors assoc-in path error))))))
+          (if (:strip opts) {:data {}} {:data data})
+          items))
+
+(defn- resolve-schema
+  [schema]
+  (cond
+    (delay? schema)
+    (resolve-schema @schema)
+
+    (true? (::schema schema))
+    schema
+
+    (or (map? schema)
+        (vector? schema))
+    (compile-schema schema)
+
+    :else
+    (throw (ex-info "Invalid value for schema." {:schema schema}))))
 
 ;; --- Public Api
+
+#?(:clj
+   (defmacro defs
+     [namesym schema]
+     {:pre [(symbol? namesym)
+            (or (map? schema)
+                (vector? schema))]}
+     `(def ~namesym
+        (delay (compile-schema ~schema)))))
 
 (defn validate
   "Validate data with specified schema.
@@ -125,20 +172,17 @@
   as third argument."
   ([data schema]
    (validate data schema nil))
-  ([data schema {:keys [strip]
-                 :or {strip false}
-                 :as opts}]
-   (let [steps (build-steps schema)
-         data (if strip (strip-values data steps) data)]
-     (validate-internal data steps opts))))
-
-(defn validate-single
-  "A helper that used just for validate one value."
-  ([data schema] (validate-single data schema nil))
   ([data schema opts]
-   (let [data {:field data}
-         steps (build-steps {:field schema})]
-     (mapv :field (validate-internal data steps opts)))))
+   (let [schema (resolve-schema schema)
+         result (impl-validate-and-coerce data (::items schema) opts)]
+     [(:errors result)
+      (:data result)])))
+
+(defn valid?
+  [data schema]
+  (let [schema (resolve-schema schema)
+        result (impl-validate data (::items schema))]
+    (:valid? result)))
 
 (defn validate!
   "Analogous function to the `validate` that instead of return
@@ -146,7 +190,7 @@
   them are or just return the validated data.
 
   This function accepts the same parameters as `validate` with
-  an additional `:message` that serves for customize the exception
+  an additional `:msg` that serves for customize the exception
   message."
   ([data schema]
    (validate! data schema nil))
@@ -156,174 +200,162 @@
        (throw (ex-info message errors))
        data))))
 
-(defn valid?
-  "Return true if the data matches the schema, otherwise
-  return false."
-  [data schema]
-  (nil? (first (validate data schema {::nomsg true}))))
-
-(defn valid-single?
-  "Analogous function to `valid?` that just validates single value."
-  [data schema]
-  (nil? (first (validate-single data schema {::nomsg true}))))
-
 ;; --- Validators
 
 (def keyword
-  {:message "must be a keyword"
+  {:type ::keyword
    :optional true
-   :validate keyword?
-   :coerce identity})
+   :validate #(keyword? %2)})
 
 (def uuid
-  {:message "must be an uuid"
+  {:type ::uuid
    :optional true
-   :validate #?(:clj #(instance? java.util.UUID %)
-                :cljs #(instance? cljs.core.UUID %))})
+   :validate #?(:clj #(instance? java.util.UUID %2)
+                :cljs #(instance? cljs.core.UUID %2))})
 
 (def ^:const ^:private +uuid-re+
   #"^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$")
 
 (def uuid-str
-  {:message "must be an uuid"
+  {:type ::uuid-str
    :optional true
-   :validate #(and (string? %)
-                   (re-seq +uuid-re+ %))
+   :validate #(and (string? %2)
+                   (re-seq +uuid-re+ %2))
    :coerce #?(:clj #(java.util.UUID/fromString %)
               :cljs #(uuid %))})
 
 (def email
   (let [rx #"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"]
-    {:message "must be a valid email"
+    {:type ::email
      :optional true
-     :validate #(and (string? %)
-                     (re-seq rx %))}))
+     :validate #(and (string? %2)
+                     (re-seq rx %2))}))
 
 (def required
-  {:message "this field is mandatory"
+  {:type ::required
    :optional false
-   :validate #(if (string? %)
-                 (not (empty? %))
-                 (not (nil? %)))})
+   :validate #(if (string? %2)
+                (not (empty? %2))
+                (not (nil? %2)))})
 
 (def number
-  {:message "must be a number"
+  {:type ::number
    :optional true
-   :validate number?})
+   :validate #(number? %2)})
 
 (def number-str
-  {:message "must be a number"
+  {:type ::number-str
    :optional true
-   :validate #(or (number? %) (and (string? %) (str/numeric? %)))
-   :coerce #(if (number? %) % (str/parse-number %))})
+   :validate #(or (number? %2) (and (string? %2) (util/numeric? %2)))
+   :coerce #(if (number? %) % (util/parse-number %))})
 
 (def integer
-  {:message "must be a integer"
+  {:type ::integer
    :optional true
-   :validate #?(:cljs #(js/Number.isInteger %)
-                :clj #(integer? %))})
+   :validate #?(:cljs #(js/Number.isInteger %2)
+                :clj #(integer? %2))})
 
 (def integer-str
-  {:message "must be a long"
+  {:type ::integer-str
    :optional true
-   :validate #(or (number? %) (and (string? %) (str/numeric? %)))
-   :coerce #(if (number? %) (int %) (str/parse-int %))})
+   :validate #(or (number? %2) (and (string? %2) (util/numeric? %2)))
+   :coerce #(if (number? %) (int %) (util/parse-int %))})
 
 (def boolean
-  {:message "must be a boolean"
+  {:type ::boolean
    :optional true
-   :validate #(or (= false %) (= true %))})
+   :validate #(or (= false %2) (= true %2))})
 
 (def boolean-str
-  {:message "must be a boolean"
+  {:type ::boolean-str
    :optional true
-   :validate #(and (string? %)
-                   (re-seq #"^(?:t|true|false|f|0|1)$" %))
+   :validate #(and (string? %2)
+                   (re-seq #"^(?:t|true|false|f|0|1)$" %2))
    :coerce #(contains? #{"t" "true" "1"} %)})
 
 (def string
-  {:message "must be a string"
+  {:type ::string
    :optional true
-   :validate string?})
+   :validate #(string? %2)})
 
 (def string-like
-  {:message "must be a string"
+  {:type ::string-like
    :optional true
+   :validate (constantly true)
    :coerce str})
 
 (def in-range
-  {:message "not in range %s and %s"
+  {:type ::in-range
    :optional true
-   :validate #(and (number? %1)
-                   (number? %2)
+   :validate #(and (number? %2)
                    (number? %3)
-                   (<= %2 %1 %3))})
+                   (number? %4)
+                   (<= %3 %2 %4))})
 
 (def positive
-  {:message "must be positive"
+  {:type ::positive
    :optional true
-   :validate pos?})
+   :validate #(pos? %2)})
 
 (def negative
-  {:message "must be negative"
+  {:type ::negative
    :optional true
-   :validate neg?})
+   :validate #(neg? %)})
 
 (def map
-  {:message "must be a map"
+  {:type ::map
    :optional true
-   :validate map?})
+   :validate #(map? %2)})
 
 (def set
-  {:message "must be a set"
+  {:type ::set
    :optional true
-   :validate set?})
+   :validate #(set? %2)})
 
 (def coll
-  {:message "must be a collection"
+  {:type ::coll
    :optional true
-   :validate coll?})
+   :validate #(coll? %2)})
 
 (def vector
-  {:message "must be a vector instance"
+  {:type ::vector
    :optional true
-   :validate vector?})
+   :validate #(vector? %2)})
 
 (def every
-  {:message "must match the predicate"
+  {:type ::every
    :optional true
-   :validate #(every? %2 %1)})
+   :validate #(every? %3 %2)})
 
 (def member
-  {:message "not in coll"
+  {:type ::member
    :optional true
-   :validate #(some #{%1} %2)})
+   :validate #(some #{%2} %3)})
 
 (def function
-  {:message "must be a function"
+  {:type ::function
    :optional true
-   :validate ifn?})
+   :validate #(fn? %2)})
 
 (def identical-to
-  {:message "does not match"
+  {:type ::identical-to
    :optional true
-   :state true
    :validate (fn [state v ref]
                (let [prev (get state ref)]
                  (= prev v)))})
 
 (def min-count
-  (letfn [(validate [v minimum]
+  (letfn [(validate [_ v minimum]
             {:pre [(number? minimum)]}
             (>= (count v) minimum))]
-    {:message "less than the minimum %s"
+    {:type ::min-count
      :optional true
      :validate validate}))
 
 (def max-count
-  (letfn [(validate [v maximum]
+  (letfn [(validate [_ v maximum]
             {:pre [(number? maximum)]}
             (<= (count v) maximum))]
-    {:message "longer than the maximum %s"
+    {:type ::max-count
      :optional true
      :validate validate}))

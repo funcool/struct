@@ -1,7 +1,11 @@
 (ns struct.tests
-  (:require #?(:cljs [cljs.test :as t]
-               :clj [clojure.test :as t])
-            [struct.core :as st]))
+  (:require
+   ;; #?(:clj  [criterium.core :refer [quick-bench]])
+   ;; #?(:cljs [cljs.spec.alpha :as s]
+   ;;    :clj  [clojure.spec.alpha :as s])
+   #?(:cljs [cljs.test :as t]
+      :clj [clojure.test :as t])
+   [struct.core :as st]))
 
 ;; --- Tests
 
@@ -17,116 +21,116 @@
   (let [scheme {:max st/number
                 :scope st/string}
         input {:scope "foobar" :max "d"}
-        errors {:max "must be a number"}
-        result (st/validate input scheme)]
-    (t/is (= errors (first result)))
-    (t/is (= {:scope "foobar"} (second result)))))
+        [error data] (st/validate input scheme)]
+    (t/is (map? error))
+    (t/is (= (get-in error [:max :type]) ::st/number))
+    (t/is (map? data))
+    (t/is (= (get data :scope) "foobar"))))
+
+(t/deftest test-predicate-validators
+  (let [scheme {:max [st/required number?]}
+        input1 {:max "foo"}
+        input2 {:max 2}
+        [error1 data1] (st/validate input1 scheme)
+        [error2 data2] (st/validate input2 scheme)]
+
+    (t/is (map? error1))
+    (t/is (map? data1))
+    (t/is (empty? data1))
+    (t/is (= (get-in error1 [:max :type]) ::st/custom-predicate))
+
+    (t/is (nil? error2))
+    (t/is (map? data2))
+    (t/is (= (get data2 :max) 2))))
 
 (t/deftest test-neested-validators
   (let [scheme {[:a :b] st/number
                 [:c :d :e] st/string}
         input {:a {:b "foo"} :c {:d {:e "bar"}}}
-        errors {:a {:b "must be a number"}}
-        result (st/validate input scheme)]
-    (t/is (= errors (first result)))
-    (t/is (= {:c {:d {:e "bar"}}} (second result)))))
-
-(t/deftest test-single-validators
-  (let [result1 (st/validate-single 2 st/number)
-        result2 (st/validate-single nil st/number)
-        result3 (st/validate-single nil [st/required st/number])]
-    (t/is (= [nil 2] result1))
-    (t/is (= [nil nil] result2))
-    (t/is (= ["this field is mandatory" nil] result3))))
+        [errors data] (st/validate input scheme)]
+    (t/is (map? errors))
+    (t/is (= (get-in errors [:a :b :type]) ::st/number))
+    (t/is (map? data))
+    (t/is (= (get-in data [:c :d :e]) "bar"))))
 
 (t/deftest test-parametric-validators
-  (let [result1 (st/validate
-                  {:name "foo"}
-                  {:name [[st/min-count 4]]})
-        result2 (st/validate
-                  {:name "bar"}
-                  {:name [[st/max-count 2]]})]
-    (t/is (= {:name "less than the minimum 4"} (first result1)))
-    (t/is (= {:name "longer than the maximum 2"} (first result2)))))
+  (let [[errors1 data1] (st/validate {:name "foo"}
+                                     {:name [[st/min-count 4]]})
+        [errors2 data2] (st/validate {:name "bar"}
+                                     {:name [[st/max-count 2]]})]
+    (t/is (map? data1))
+    (t/is (map? data2))
+    (t/is (empty? data1))
+    (t/is (empty? data2))
+    (t/is (= (get-in errors1 [:name :type]) ::st/min-count))
+    (t/is (= (get-in errors2 [:name :type]) ::st/max-count))
+    (t/is (= (get-in errors1 [:name :value]) "foo"))
+    (t/is (= (get-in errors2 [:name :value]) "bar"))))
 
 (t/deftest test-simple-validators-with-vector-schema
   (let [scheme [[:max st/number]
                 [:scope st/string]]
         input {:scope "foobar" :max "d"}
-        errors {:max "must be a number"}
-        result (st/validate input scheme)]
-    (t/is (= errors (first result)))
-    (t/is (= {:scope "foobar"} (second result)))))
+        [errors data] (st/validate input scheme)]
 
-(t/deftest test-simple-validators-with-translate
-  (let [scheme [[:max st/number]
-                [:scope st/string]]
+    (t/is (map? errors))
+    (t/is (= (get-in errors [:max :type]) ::st/number))
+    (t/is (map? data))
+    (t/is (= (get data :scope) "foobar"))))
+
+(t/deftest test-simple-validators-message
+  (let [scheme [[:max [st/number :message (constantly "a")]]
+                [:scope [st/string :message (constantly "b")]]]
         input {:scope "foobar" :max "d"}
-        errors {:max "a"}
-        result (st/validate input scheme {:translate (constantly "a")})]
-    (t/is (= errors (first result)))
-    (t/is (= {:scope "foobar"} (second result)))))
+        [errros data] (st/validate input scheme)]
+    (t/is (map? errros))
+    (t/is (map? data))
+    (t/is (= (get-in errros [:max :type]) ::st/number))
+    (t/is (= (get-in errros [:max :message]) "a"))
+    (t/is (= (get data :scope) "foobar"))))
 
 (t/deftest test-dependent-validators-1
   (let [scheme [[:password1 st/string]
                 [:password2 [st/identical-to :password1]]]
         input {:password1 "foobar"
                :password2 "foobar."}
-        errors {:password2 "does not match"}
-        result (st/validate input scheme)]
-    (t/is (= errors (first result)))
-    (t/is (= {:password1 "foobar"} (second result)))))
+        [errors data] (st/validate input scheme)]
+    (t/is (map? errors))
+    (t/is (map? data))
+    (t/is (= (get-in errors [:password2 :type]) ::st/identical-to))
+    (t/is (= (get data :password1) "foobar"))))
 
 (t/deftest test-dependent-validators-2
   (let [scheme [[:password1 st/string]
                 [:password2 [st/identical-to :password1]]]
         input {:password1 "foobar"
                :password2 "foobar"}
-        result (st/validate input scheme)]
-    (t/is (= nil (first result)))
-    (t/is (= {:password1 "foobar"
-              :password2 "foobar"} (second result)))))
+        [errors data] (st/validate input scheme)]
+    (t/is (nil? errors))
+    (t/is (map? data))
+    (t/is (= (get data :password1) "foobar"))
+    (t/is (= (get data :password2) "foobar"))))
 
 (t/deftest test-multiple-validators
   (let [scheme {:max [st/required st/number]
                 :scope st/string}
         input {:scope "foobar"}
-        errors {:max "this field is mandatory"}
-        result (st/validate input scheme)]
-    (t/is (= errors (first result)))
-    (t/is (= {:scope "foobar"} (second result)))))
+        [errors data] (st/validate input scheme)]
+    (t/is (map? errors))
+    (t/is (map? data))
+    (t/is (= (get-in errors [:max :type]) ::st/required))
+    (t/is (= (get data :scope) "foobar"))))
 
 (t/deftest test-validation-with-coersion
-  (let [scheme {:max st/integer-str
-                :scope st/string}
+  (let [scheme {:max [st/required st/integer-str]
+                :scope [[st/string :coerce (constantly :foo)]]}
         input {:max "2" :scope "foobar"}
-        result (st/validate input scheme)]
-    (t/is (= nil (first result)))
-    (t/is (= {:max 2 :scope "foobar"} (second result)))))
-
-(t/deftest test-validation-with-custom-coersion
-  (let [scheme {:max [[st/number-str :coerce (constantly :foo)]]
-                :scope st/string}
-        input {:max "2" :scope "foobar"}
-        result (st/validate input scheme)]
-    (t/is (= nil (first result)))
-    (t/is (= {:max :foo :scope "foobar"} (second result)))))
-
-(t/deftest test-validation-with-custom-message
-  (let [scheme {:max [[st/number-str :message "custom msg"]]
-                :scope st/string}
-        input {:max "g" :scope "foobar"}
-        errors {:max "custom msg"}
-        result (st/validate input scheme)]
-    (t/is (= errors (first result)))
-    (t/is (= {:scope "foobar"} (second result)))))
-
-(t/deftest test-coersion-with-valid-values
-  (let [scheme {:a st/number-str
-                :b st/integer-str}
-        input {:a 2.3 :b 3.3}
         [errors data] (st/validate input scheme)]
-    (t/is (= {:a 2.3 :b 3} data))))
+
+    (t/is (nil? errors))
+    (t/is (map? data))
+    (t/is (= (get data :max) 2))
+    (t/is (= (get data :scope) :foo))))
 
 (t/deftest test-validation-nested-data-in-a-vector
   (let [scheme {:a [st/vector [st/every number?]]}
@@ -134,41 +138,84 @@
         input2 {:a [1 2 3 4 "a"]}
         [errors1 data1] (st/validate input1 scheme)
         [errors2 data2] (st/validate input2 scheme)]
-    (t/is (= data1 input1))
-    (t/is (= errors1 nil))
-    (t/is (= data2 {}))
-    (t/is (= errors2 {:a "must match the predicate"}))))
 
-(t/deftest test-in-range-validator
-  (t/is (= {:age "not in range 18 and 26"}
-           (-> {:age 17}
-               (st/validate {:age [[st/in-range 18 26]]})
-               first))))
 
-(t/deftest test-honor-nested-data
-  (let [scheme          {[:a :b] [st/required
-                                  st/string
-                                  [st/min-count 2 :message "foobar"]
-                                  [st/max-count 5]]}
-        input1          {:a {:b "abcd"}}
-        input2          {:a {:b "abcdefgh"}}
-        input3          {:a {:b "a"}}
-        [errors1 data1] (st/validate input1 scheme)
-        [errors2 data2] (st/validate input2 scheme)
-        [errors3 data3] (st/validate input3 scheme)]
-    (t/is (= data1 input1))
-    (t/is (= errors1 nil))
-    (t/is (= data2 {}))
-    (t/is (= errors2 {:a {:b "longer than the maximum 5"}}))
-    (t/is (= data3 {}))
-    (t/is (= errors3 {:a {:b "foobar"}}))))
+    (t/is (map? data1))
+    (t/is (nil? errors1))
+    (t/is (= (get data1 :a) [1 2 3 4]))
+
+    (t/is (map? data2))
+    (t/is (map? errors2))
+    (t/is (empty? data2))
+    (t/is (= (get-in errors2 [:a :type] ::st/every)))))
+
+;; (def email-rx
+;;   #"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$")
+
+;; (defn email?
+;;   [v]
+;;   (and string?
+;;        (re-matches email-rx v)))
+
+;; (s/def ::username string?)
+;; (s/def ::age number?)
+;; (s/def ::email email?)
+;; ;;
+;; (s/def ::bench-form
+;;   (s/keys :req-un [::username ::age ::email]))
+
+;; (st/defs bench-form
+;;   {:username [st/required st/string]
+;;    :age [st/required st/number]
+;;    :email [st/required st/email]})
+
+;; (defn bench-fn-using-spec
+;;   [data]
+;;   (let [result (s/valid? ::bench-form data)]
+;;     (assert result "should be valid")))
+
+;; (defn bench-fn-using-struct
+;;   [data]
+;;   (let [result (st/valid? data bench-form)]
+;;     (assert result "should be valid")))
+
+;; #?(:cljs
+;;    (defn bench1
+;;      []
+;;      (simple-benchmark [data {:username "foo" :age 10 :email "foo@bar.com"}]
+;;        (bench-fn-using-spec data)
+;;        100000))
+;;    :clj
+;;    (defn bench1
+;;      []
+;;      (let [data {:username "foo" :age 10 :email "foo@bar.com"}]
+;;        (quick-bench (bench-fn-using-spec data)))))
+
+;; #?(:cljs
+;;    (defn bench2
+;;      []
+;;      (simple-benchmark [data {:username "foo" :age 10 :email "foo@bar.com"}]
+;;        (bench-fn-using-struct data)
+;;        100000))
+;;    :clj
+;;    (defn bench2
+;;      []
+;;      (let [data {:username "foo" :age 10 :email "foo@bar.com"}]
+;;        (quick-bench (bench-fn-using-struct data)))))
 
 ;; --- Entry point
 
 #?(:cljs
    (do
      (enable-console-print!)
-     (set! *main-cli-fn* #(t/run-tests))))
+     (set! *main-cli-fn* #(t/run-tests)))
+   :clj
+   (defn -main
+     [& args]
+     (let [{:keys [fail]} (t/run-all-tests #"^struct.tests.*")]
+       (if (pos? fail)
+         (System/exit fail)
+         (System/exit 0)))))
 
 #?(:cljs
    (defmethod t/report [:cljs.test/default :end-run-tests]
