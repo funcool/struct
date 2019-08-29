@@ -3,6 +3,8 @@
   (:require [struct.util :as util])
   #?(:cljs (:require-macros struct.core)))
 
+(def ^:dynamic *registry* (atom {}))
+
 (def ^:private map' #?(:cljs cljs.core/map
                        :clj clojure.core/map))
 
@@ -148,9 +150,13 @@
              (if (:strip opts) {:data {}} {:data data})
              (dissoc schema ::compiled)))
 
+
 (defn- resolve-schema
   [schema]
   (cond
+    (keyword? schema)
+    (resolve-schema (get @*registry* schema))
+
     (delay? schema)
     (resolve-schema @schema)
 
@@ -168,12 +174,15 @@
 
 #?(:clj
    (defmacro defs
-     [namesym schema]
-     {:pre [(symbol? namesym)
-            (or (map? schema)
+     [nsym schema]
+     {:pre [(or (map? schema)
                 (vector? schema))]}
-     `(def ~namesym
-        (delay (compile-schema ~schema)))))
+     (cond
+       (keyword? nsym)
+       `(swap! *registry* assoc ~nsym (delay (compile-schema ~schema)))
+
+       (symbol? nsym)
+       `(def ~nsym (delay (compile-schema ~schema))))))
 
 (defn validate
   "Validate data with specified schema.
