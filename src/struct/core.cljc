@@ -3,10 +3,6 @@
   (:require [struct.util :as util])
   #?(:cljs (:require-macros struct.core)))
 
-#?(:clj (set! *warn-on-reflection* true)
-   :cljs (set! *warn-on-infer* true))
-
-
 (def ^:private map' #?(:cljs cljs.core/map
                        :clj clojure.core/map))
 
@@ -26,7 +22,7 @@
     (dissoc m k)))
 
 (def ^:private opts-params
-  #{:coerce :message :optional :type})
+  #{:coerce :message :optional :code})
 
 (def ^:private notopts?
   (complement opts-params))
@@ -38,7 +34,7 @@
     data
 
     (fn? data)
-    {:type ::custom-predicate
+    {:code ::custom-predicate
      :optional true
      :validate #(data %2)}
 
@@ -106,7 +102,7 @@
   (let [vdata (:validator result)
         msg (:message vdata nil)
         msg (if (fn? msg) (msg vdata) msg)]
-    {:type (:type vdata)
+    {:code (:code vdata)
      :message msg
      :value value}))
 
@@ -203,12 +199,12 @@
 ;; --- Validators
 
 (def keyword
-  {:type ::keyword
+  {:code ::keyword
    :optional true
    :validate #(keyword? %2)})
 
 (def uuid
-  {:type ::uuid
+  {:code ::uuid
    :optional true
    :validate #?(:clj #(instance? java.util.UUID %2)
                 :cljs #(instance? cljs.core.UUID %2))})
@@ -217,7 +213,7 @@
   #"^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$")
 
 (def uuid-str
-  {:type ::uuid-str
+  {:code ::uuid-str
    :optional true
    :validate #(and (string? %2)
                    (re-seq +uuid-re+ %2))
@@ -226,66 +222,66 @@
 
 (def email
   (let [rx #"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"]
-    {:type ::email
+    {:code ::email
      :optional true
      :validate #(and (string? %2)
                      (re-seq rx %2))}))
 
 (def required
-  {:type ::required
+  {:code ::required
    :optional false
    :validate #(if (string? %2)
                 (not (empty? %2))
                 (not (nil? %2)))})
 
 (def number
-  {:type ::number
+  {:code ::number
    :optional true
    :validate #(number? %2)})
 
 (def number-str
-  {:type ::number-str
+  {:code ::number-str
    :optional true
    :validate #(or (number? %2) (and (string? %2) (util/numeric? %2)))
    :coerce #(if (number? %) % (util/parse-number %))})
 
 (def integer
-  {:type ::integer
+  {:code ::integer
    :optional true
    :validate #?(:cljs #(js/Number.isInteger %2)
                 :clj #(integer? %2))})
 
 (def integer-str
-  {:type ::integer-str
+  {:code ::integer-str
    :optional true
    :validate #(or (number? %2) (and (string? %2) (util/numeric? %2)))
    :coerce #(if (number? %) (int %) (util/parse-int %))})
 
 (def boolean
-  {:type ::boolean
+  {:code ::boolean
    :optional true
    :validate #(or (= false %2) (= true %2))})
 
 (def boolean-str
-  {:type ::boolean-str
+  {:code ::boolean-str
    :optional true
    :validate #(and (string? %2)
                    (re-seq #"^(?:t|true|false|f|0|1)$" %2))
    :coerce #(contains? #{"t" "true" "1"} %)})
 
 (def string
-  {:type ::string
+  {:code ::string
    :optional true
    :validate #(string? %2)})
 
 (def string-like
-  {:type ::string-like
+  {:code ::string-like
    :optional true
    :validate (constantly true)
    :coerce str})
 
 (def in-range
-  {:type ::in-range
+  {:code ::in-range
    :optional true
    :validate #(and (number? %2)
                    (number? %3)
@@ -293,52 +289,52 @@
                    (<= %3 %2 %4))})
 
 (def positive
-  {:type ::positive
+  {:code ::positive
    :optional true
    :validate #(pos? %2)})
 
 (def negative
-  {:type ::negative
+  {:code ::negative
    :optional true
    :validate #(neg? %)})
 
 (def map
-  {:type ::map
+  {:code ::map
    :optional true
    :validate #(map? %2)})
 
 (def set
-  {:type ::set
+  {:code ::set
    :optional true
    :validate #(set? %2)})
 
 (def coll
-  {:type ::coll
+  {:code ::coll
    :optional true
    :validate #(coll? %2)})
 
 (def vector
-  {:type ::vector
+  {:code ::vector
    :optional true
    :validate #(vector? %2)})
 
 (def every
-  {:type ::every
+  {:code ::every
    :optional true
    :validate #(every? %3 %2)})
 
 (def member
-  {:type ::member
+  {:code ::member
    :optional true
    :validate #(some #{%2} %3)})
 
 (def function
-  {:type ::function
+  {:code ::function
    :optional true
    :validate #(fn? %2)})
 
 (def identical-to
-  {:type ::identical-to
+  {:code ::identical-to
    :optional true
    :validate (fn [state v ref]
                (let [prev (get state ref)]
@@ -348,7 +344,7 @@
   (letfn [(validate [_ v minimum]
             {:pre [(number? minimum)]}
             (>= (count v) minimum))]
-    {:type ::min-count
+    {:code ::min-count
      :optional true
      :validate validate}))
 
@@ -356,6 +352,6 @@
   (letfn [(validate [_ v maximum]
             {:pre [(number? maximum)]}
             (<= (count v) maximum))]
-    {:type ::max-count
+    {:code ::max-count
      :optional true
      :validate validate}))

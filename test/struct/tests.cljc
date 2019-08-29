@@ -23,7 +23,7 @@
         input {:scope "foobar" :max "d"}
         [error data] (st/validate scheme input)]
     (t/is (map? error))
-    (t/is (= (get-in error [:max :type]) ::st/number))
+    (t/is (= (get-in error [:max :code]) ::st/number))
     (t/is (map? data))
     (t/is (= (get data :scope) "foobar"))))
 
@@ -37,7 +37,7 @@
     (t/is (map? error1))
     (t/is (map? data1))
     (t/is (empty? data1))
-    (t/is (= (get-in error1 [:max :type]) ::st/custom-predicate))
+    (t/is (= (get-in error1 [:max :code]) ::st/custom-predicate))
 
     (t/is (nil? error2))
     (t/is (map? data2))
@@ -49,7 +49,7 @@
         input {:a {:b "foo"} :c {:d {:e "bar"}}}
         [errors data] (st/validate scheme input)]
     (t/is (map? errors))
-    (t/is (= (get-in errors [:a :b :type]) ::st/number))
+    (t/is (= (get-in errors [:a :b :code]) ::st/number))
     (t/is (map? data))
     (t/is (= (get-in data [:c :d :e]) "bar"))))
 
@@ -60,8 +60,8 @@
     (t/is (map? data2))
     (t/is (empty? data1))
     (t/is (empty? data2))
-    (t/is (= (get-in errors1 [:name :type]) ::st/min-count))
-    (t/is (= (get-in errors2 [:name :type]) ::st/max-count))
+    (t/is (= (get-in errors1 [:name :code]) ::st/min-count))
+    (t/is (= (get-in errors2 [:name :code]) ::st/max-count))
     (t/is (= (get-in errors1 [:name :value]) "foo"))
     (t/is (= (get-in errors2 [:name :value]) "bar"))))
 
@@ -72,7 +72,7 @@
         [errors data] (st/validate scheme input)]
 
     (t/is (map? errors))
-    (t/is (= (get-in errors [:max :type]) ::st/number))
+    (t/is (= (get-in errors [:max :code]) ::st/number))
     (t/is (map? data))
     (t/is (= (get data :scope) "foobar"))))
 
@@ -83,7 +83,7 @@
         [errros data] (st/validate scheme input)]
     (t/is (map? errros))
     (t/is (map? data))
-    (t/is (= (get-in errros [:max :type]) ::st/number))
+    (t/is (= (get-in errros [:max :code]) ::st/number))
     (t/is (= (get-in errros [:max :message]) "a"))
     (t/is (= (get data :scope) "foobar"))))
 
@@ -95,7 +95,7 @@
         [errors data] (st/validate scheme input)]
     (t/is (map? errors))
     (t/is (map? data))
-    (t/is (= (get-in errors [:password2 :type]) ::st/identical-to))
+    (t/is (= (get-in errors [:password2 :code]) ::st/identical-to))
     (t/is (= (get data :password1) "foobar"))))
 
 (t/deftest test-dependent-validators-2
@@ -116,7 +116,7 @@
         [errors data] (st/validate scheme input)]
     (t/is (map? errors))
     (t/is (map? data))
-    (t/is (= (get-in errors [:max :type]) ::st/required))
+    (t/is (= (get-in errors [:max :code]) ::st/required))
     (t/is (= (get data :scope) "foobar"))))
 
 (t/deftest test-validation-with-coersion
@@ -145,7 +145,7 @@
     (t/is (map? data2))
     (t/is (map? errors2))
     (t/is (empty? data2))
-    (t/is (= (get-in errors2 [:a :type] ::st/every)))))
+    (t/is (= (get-in errors2 [:a :code] ::st/every)))))
 
 ;; (def email-rx
 ;;   #"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$")
