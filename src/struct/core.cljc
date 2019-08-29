@@ -46,38 +46,50 @@
           ofn  (:validate vdata)
           nfn  (fn [data val]
                  (apply ofn data val args))]
-      (merge vdata opts {:validate nfn}))
+      (merge vdata opts {:validate nfn :args args}))
 
     :else
     (throw (ex-info (pr-str "Invalid validator data:" data) {:data data}))))
 
-(defn compile-validation-fn
-  [items]
-  (reduce (fn [acc item]
-            (let [validate-fn (:validate item)
-                  optional? (:optional item)]
+(defn- compile-validation-fn
+  [validators]
+  (reduce (fn [acc validator]
+            (let [validate-fn (:validate validator)
+                  optional? (:optional validator)]
               (fn [data value]
                 (if (or (and (nil? value) optional?)
                         (validate-fn data value))
                   (acc data value)
-                  {:valid? false :validator item}))))
+                  {:valid? false :validator validator}))))
           (constantly {:valid? true})
-          (reverse items)))
+          (reverse validators)))
 
-(defn- compile-coerce-fn
-  [items]
-  (reduce (fn [acc item]
-            (let [coerce (:coerce item identity)]
-              #(coerce (acc %))))
-          identity
-          (reverse items)))
+(defn- compile-validation-and-coerce-fn
+  [validators]
+  (reduce (fn [acc validator]
+            (let [validate-fn (:validate validator)
+                  optional? (:optional validator)
+                  coerce (:coerce validator identity)]
+              (fn [data value]
+                (cond
+                  (and (nil? value) optional?)
+                  (acc data value)
+
+                  (validate-fn data value)
+                  (update (acc data value) :value coerce)
+
+                  :else
+                  {:valid? false :validator validator}))))
+          (fn [data value]
+            {:valid? true :value value})
+          (reverse validators)))
 
 (defn- compile-schema-entry
-  [[key & validators]]
+  [key validators]
   (let [validators (mapv compile-validator validators)]
     {:path (if (vector? key) key [key])
      :vfn (compile-validation-fn validators)
-     :cfn (compile-coerce-fn validators)}))
+     :cfn (compile-validation-and-coerce-fn validators)}))
 
 (defn- schema-map->vec
   [schema]
@@ -90,12 +102,14 @@
 
 (defn compile-schema
   [schema]
-  (let [items (cond
-                (vector? schema) (seq schema)
-                (map? schema) (schema-map->vec schema)
-                :else (throw (ex-info "Invalid schema." {})))]
-    {::schema true
-     ::items (mapv compile-schema-entry items)}))
+  (let [entries (cond
+                  (vector? schema) (seq schema)
+                  (map? schema) (schema-map->vec schema)
+                  :else (throw (ex-info "Invalid schema." {})))]
+    (reduce (fn [acc [key & validators]]
+              (assoc acc key (compile-schema-entry key validators)))
+            {::compiled true}
+            entries)))
 
 (defn- format-error
   [result value]
@@ -103,35 +117,36 @@
         msg (:message vdata nil)
         msg (if (fn? msg) (msg vdata) msg)]
     {:code (:code vdata)
+     :type (:type vdata)
      :message msg
      :value value}))
 
 (defn- impl-validate
-  [items data]
-  (reduce (fn [_ {:keys [path vfn] :as item}]
-            (let [value (get-in data path)]
-              (or (vfn data value)
-                  (reduced false))))
-          true
-          items))
+  [schema data]
+  (reduce-kv (fn [_ _ {:keys [path vfn] :as item}]
+               (let [value (get-in data path)]
+                 (or (vfn data value)
+                     (reduced false))))
+             true
+             (dissoc schema ::compiled)))
 
 (defn- impl-validate-and-coerce
-  [items data opts]
-  (reduce (fn [acc {:keys [path vfn cfn] :as item}]
-            (let [value (get-in data path)
-                  result (vfn data value)]
-              (if (:valid? result)
-                (let [val (cfn value)]
-                  (if (nil? val)
-                    acc
-                    (update acc :data assoc-in path val)))
-                (let [validator (:validator result)
-                      error (format-error result value)]
-                  (-> acc
-                      (update :data dissoc-in path)
-                      (update :errors assoc-in path error))))))
-          (if (:strip opts) {:data {}} {:data data})
-          items))
+  [schema data opts]
+  (reduce-kv (fn [acc key {:keys [path vfn cfn] :as entry}]
+               (let [value (get-in data path)
+                     result (cfn data value)
+                     result-value (:value result)]
+                 (if (:valid? result)
+                   (if (nil? result-value)
+                     acc
+                     (update acc :data assoc-in path result-value))
+                   (let [validator (:validator result)
+                         error (format-error result value)]
+                     (-> acc
+                         (update :data dissoc-in path)
+                         (update :errors assoc-in path error))))))
+             (if (:strip opts) {:data {}} {:data data})
+             (dissoc schema ::compiled)))
 
 (defn- resolve-schema
   [schema]
@@ -139,7 +154,7 @@
     (delay? schema)
     (resolve-schema @schema)
 
-    (true? (::schema schema))
+    (true? (::compiled schema))
     schema
 
     (or (map? schema)
@@ -170,14 +185,14 @@
    (validate schema data nil))
   ([schema data opts]
    (let [schema (resolve-schema schema)
-         result (impl-validate-and-coerce (::items schema) data opts)]
+         result (impl-validate-and-coerce schema data opts)]
      [(:errors result)
       (:data result)])))
 
 (defn valid?
   [schema data]
   (let [schema (resolve-schema schema)
-        result (impl-validate (::items schema) data)]
+        result (impl-validate schema data)]
     (:valid? result)))
 
 (defn validate!
@@ -200,11 +215,13 @@
 
 (def keyword
   {:code ::keyword
+   :type ::builtin
    :optional true
    :validate #(keyword? %2)})
 
 (def uuid
   {:code ::uuid
+   :type ::builtin
    :optional true
    :validate #?(:clj #(instance? java.util.UUID %2)
                 :cljs #(instance? cljs.core.UUID %2))})
@@ -214,6 +231,7 @@
 
 (def uuid-str
   {:code ::uuid-str
+   :type ::builtin
    :optional true
    :validate #(and (string? %2)
                    (re-seq +uuid-re+ %2))
@@ -223,12 +241,14 @@
 (def email
   (let [rx #"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"]
     {:code ::email
+     :type ::builtin
      :optional true
      :validate #(and (string? %2)
                      (re-seq rx %2))}))
 
 (def required
   {:code ::required
+   :type ::builtin
    :optional false
    :validate #(if (string? %2)
                 (not (empty? %2))
@@ -236,34 +256,40 @@
 
 (def number
   {:code ::number
+   :type ::builtin
    :optional true
    :validate #(number? %2)})
 
 (def number-str
   {:code ::number-str
+   :type ::builtin
    :optional true
    :validate #(or (number? %2) (and (string? %2) (util/numeric? %2)))
    :coerce #(if (number? %) % (util/parse-number %))})
 
 (def integer
   {:code ::integer
+   :type ::builtin
    :optional true
    :validate #?(:cljs #(js/Number.isInteger %2)
                 :clj #(integer? %2))})
 
 (def integer-str
   {:code ::integer-str
+   :type ::builtin
    :optional true
    :validate #(or (number? %2) (and (string? %2) (util/numeric? %2)))
    :coerce #(if (number? %) (int %) (util/parse-int %))})
 
 (def boolean
   {:code ::boolean
+   :type ::builtin
    :optional true
    :validate #(or (= false %2) (= true %2))})
 
 (def boolean-str
   {:code ::boolean-str
+   :type ::builtin
    :optional true
    :validate #(and (string? %2)
                    (re-seq #"^(?:t|true|false|f|0|1)$" %2))
@@ -271,17 +297,20 @@
 
 (def string
   {:code ::string
+   :type ::builtin
    :optional true
    :validate #(string? %2)})
 
 (def string-like
   {:code ::string-like
+   :type ::builtin
    :optional true
    :validate (constantly true)
    :coerce str})
 
 (def in-range
   {:code ::in-range
+   :type ::builtin
    :optional true
    :validate #(and (number? %2)
                    (number? %3)
@@ -290,51 +319,61 @@
 
 (def positive
   {:code ::positive
+   :type ::builtin
    :optional true
    :validate #(pos? %2)})
 
 (def negative
   {:code ::negative
+   :type ::builtin
    :optional true
    :validate #(neg? %)})
 
 (def map
   {:code ::map
+   :type ::builtin
    :optional true
    :validate #(map? %2)})
 
 (def set
   {:code ::set
+   :type ::builtin
    :optional true
    :validate #(set? %2)})
 
 (def coll
   {:code ::coll
+   :type ::builtin
    :optional true
    :validate #(coll? %2)})
 
 (def vector
   {:code ::vector
+   :type ::builtin
    :optional true
    :validate #(vector? %2)})
 
 (def every
   {:code ::every
+   :type ::builtin
    :optional true
    :validate #(every? %3 %2)})
 
 (def member
   {:code ::member
+   :type ::builtin
    :optional true
    :validate #(some #{%2} %3)})
 
 (def function
   {:code ::function
+   :type ::builtin
    :optional true
    :validate #(fn? %2)})
 
 (def identical-to
   {:code ::identical-to
+   :type ::builtin
    :optional true
    :validate (fn [state v ref]
                (let [prev (get state ref)]
@@ -345,6 +384,7 @@
             {:pre [(number? minimum)]}
             (>= (count v) minimum))]
     {:code ::min-count
+     :type ::builtin
      :optional true
      :validate validate}))
 
@@ -353,5 +393,6 @@
             {:pre [(number? maximum)]}
             (<= (count v) maximum))]
     {:code ::max-count
+     :type ::builtin
      :optional true
      :validate validate}))
