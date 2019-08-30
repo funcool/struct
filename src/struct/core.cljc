@@ -5,12 +5,10 @@
 
 (def ^:dynamic *registry* (atom {}))
 
+;; --- Impl details
+
 (def ^:private map' #?(:cljs cljs.core/map
                        :clj clojure.core/map))
-
-(def ^:private vector' #?(:cljs cljs.core/vector
-                          :clj clojure.core/vector))
-;; --- Impl details
 
 (defn- dissoc-in
   [m [k & ks]]
@@ -24,10 +22,26 @@
     (dissoc m k)))
 
 (def ^:private opts-params
-  #{:coerce :message :optional :code})
+  #{:coerce :message :optional :code :type})
 
 (def ^:private notopts?
   (complement opts-params))
+
+(declare impl-validate-and-coerce)
+(declare impl-validate-only)
+(declare impl-coerce-only)
+(declare resolve-schema)
+
+(defn- schema->validator
+  [schema]
+  {:code (::name schema)
+   :type ::builtin
+   :optional true
+   :validate (fn [data value]
+               (let [{:keys [valid?] :as result} (impl-validate-only schema value)]
+                 valid?))
+   :coerce (fn [value]
+             (impl-coerce-only schema value))})
 
 (defn- compile-validator
   [data]
@@ -35,8 +49,12 @@
     (map? data)
     data
 
+    (keyword? data)
+    (schema->validator (resolve-schema data))
+
     (fn? data)
     {:code ::custom-predicate
+     :type ::builtin
      :optional true
      :validate #(data %2)}
 
@@ -66,6 +84,14 @@
           (constantly {:valid? true})
           (reverse validators)))
 
+(defn- compile-coerce-fn
+  [items]
+  (reduce (fn [acc item]
+            (let [coerce (:coerce item identity)]
+              #(coerce (acc %))))
+          identity
+          (reverse items)))
+
 (defn- compile-validation-and-coerce-fn
   [validators]
   (reduce (fn [acc validator]
@@ -91,7 +117,8 @@
   (let [validators (mapv compile-validator validators)]
     {:path (if (vector? key) key [key])
      :vfn (compile-validation-fn validators)
-     :cfn (compile-validation-and-coerce-fn validators)}))
+     :cfn (compile-coerce-fn validators)
+     :cvfn (compile-validation-and-coerce-fn validators)}))
 
 (defn- schema-map->vec
   [schema]
@@ -103,14 +130,15 @@
              schema))
 
 (defn compile-schema
-  [schema]
+  [sname schema]
   (let [entries (cond
                   (vector? schema) (seq schema)
                   (map? schema) (schema-map->vec schema)
                   :else (throw (ex-info "Invalid schema." {})))]
     (reduce (fn [acc [key & validators]]
-              (assoc acc key (compile-schema-entry key validators)))
-            {::compiled true}
+              (assoc-in acc [:fields key] (compile-schema-entry key validators)))
+            {::compiled true
+             ::name sname}
             entries)))
 
 (defn- format-error
@@ -122,34 +150,6 @@
      :type (:type vdata)
      :message msg
      :value value}))
-
-(defn- impl-validate
-  [schema data]
-  (reduce-kv (fn [_ _ {:keys [path vfn] :as item}]
-               (let [value (get-in data path)]
-                 (or (vfn data value)
-                     (reduced false))))
-             true
-             (dissoc schema ::compiled)))
-
-(defn- impl-validate-and-coerce
-  [schema data opts]
-  (reduce-kv (fn [acc key {:keys [path vfn cfn] :as entry}]
-               (let [value (get-in data path)
-                     result (cfn data value)
-                     result-value (:value result)]
-                 (if (:valid? result)
-                   (if (nil? result-value)
-                     acc
-                     (update acc :data assoc-in path result-value))
-                   (let [validator (:validator result)
-                         error (format-error result value)]
-                     (-> acc
-                         (update :data dissoc-in path)
-                         (update :errors assoc-in path error))))))
-             (if (:strip opts) {:data {}} {:data data})
-             (dissoc schema ::compiled)))
-
 
 (defn- resolve-schema
   [schema]
@@ -165,10 +165,49 @@
 
     (or (map? schema)
         (vector? schema))
-    (compile-schema schema)
+    (compile-schema (gensym "struct") schema)
+
+    (nil? schema)
+    (throw (ex-info "Undefined schema" {}))
 
     :else
     (throw (ex-info "Invalid value for schema." {:schema schema}))))
+
+(defn- impl-validate-only
+  [schema data]
+  (reduce-kv (fn [_ _ {:keys [path vfn] :as item}]
+               (let [value (get-in data path)]
+                 (or (vfn data value)
+                     (reduced false))))
+             true
+             (:fields schema)))
+
+(defn- impl-coerce-only
+  [schema data]
+  (reduce-kv (fn [acc _ {:keys [path cfn] :as item}]
+               (let [value (get-in data path)]
+                 (assoc-in acc path (cfn value))))
+             {}
+             (:fields schema)))
+
+(defn- impl-validate-and-coerce
+  [schema data opts]
+  (reduce-kv (fn [acc key {:keys [path cvfn] :as entry}]
+               (let [value (get-in data path)
+                     result (cvfn data value)
+                     result-value (:value result)]
+
+                 (if (:valid? result)
+                   (if (nil? result-value)
+                     acc
+                     (update acc :data assoc-in path result-value))
+                   (let [validator (:validator result)
+                         error (format-error result value)]
+                     (-> acc
+                         (update :data dissoc-in path)
+                         (update :errors assoc-in path error))))))
+             (if (:strip opts) {:data {}} {:data data})
+             (:fields schema)))
 
 ;; --- Public Api
 
@@ -179,10 +218,11 @@
                 (vector? schema))]}
      (cond
        (keyword? nsym)
-       `(swap! *registry* assoc ~nsym (delay (compile-schema ~schema)))
+       `(swap! *registry* assoc ~nsym (delay (compile-schema ~nsym ~schema)))
 
        (symbol? nsym)
-       `(def ~nsym (delay (compile-schema ~schema))))))
+       (let [foo# (symbol (str *ns*) (str nsym))]
+         `(def ~nsym (delay (compile-schema (quote ~foo#) ~schema)))))))
 
 (defn validate
   "Validate data with specified schema.
@@ -201,7 +241,7 @@
 (defn valid?
   [schema data]
   (let [schema (resolve-schema schema)
-        result (impl-validate schema data)]
+        result (impl-validate-only schema data)]
     (:valid? result)))
 
 (defn validate!
@@ -405,3 +445,13 @@
      :type ::builtin
      :optional true
      :validate validate}))
+
+(defn pred
+  [f & {:keys [code message coerce]}]
+  {:optional true
+   :code code
+   :message message
+   :type ::user-defined
+   :validate #(f %2)
+   :coerce (if (fn? coerce) coerce identity)})
+
