@@ -1,15 +1,15 @@
 (ns struct.alpha
-  (:refer-clojure :exclude [and])
+  ;; (:refer-clojure :exclude [and])
   (:require [struct.util :as util])
-  #?(:cljs (:require-macros struct.alpha)))
+  #?(:cljs (:require-macros [struct.alpha :refer [defs]])))
 
 (def ^:dynamic *registry* (atom {}))
 
 ;; --- Impl
 
 (defprotocol ISpec
-  (-conform [_ _])
-  (-explain [_ _ _]))
+  (-conform [it val])
+  (-explain [it path val]))
 
 (defrecord FnSpec [pred name coerce]
   ISpec
@@ -120,15 +120,17 @@
 (defn pred
   "Programatically create a spec instance from predicate
   and optionaly a coercer and name."
-  [f c n]
-  (assoc (get-spec f) :coerce c :name n))
+  ([f c]
+   (assoc (get-spec f) :coerce c))
+  ([f c n]
+   (assoc (get-spec f) :coerce c :name n)))
 
 (defn opt
   [spec]
   (let [spec (get-spec spec)]
     (->OptSpec spec (:name spec))))
 
-(defn and
+(defn &&
   [& specs]
   (let [specs (map get-spec specs)]
     (->AndSpec specs nil)))
@@ -146,7 +148,8 @@
 
 (defn conform
   [spec data]
-  (-conform (get-spec spec) data))
+  (let [spec (get-spec spec)]
+    (-conform spec data)))
 
 (defn explain
   [spec data]
@@ -155,17 +158,40 @@
       nil
       problems)))
 
-;; (defs ::number number?)
-;; (defs ::string string?)
+(def ^:const ^:private +uuid-re+
+  #"^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$")
 
-;; (defs ::width ::number)
-;; (defs ::height ::number)
+(def ^:const ^:private +email-re+
+  #"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$")
 
-;; (defs ::even even?)
+(defs ::string string?)
+(defs ::number number?)
+(defs ::keyword keyword?)
+(defs ::boolean boolean?)
+(defs ::positive pos?)
+(defs ::negative neg?)
+(defs ::map map?)
+(defs ::set set?)
+(defs ::coll coll?)
+(defs ::vector vector?)
 
-;; (defs ::size
-;;   (map :width (and ::number ::even)
-;;        :height ::height
-;;        :desc (opt ::string)))
-;; ;; )
+(defs ::uuid #?(:clj #(instance? java.util.UUID %)
+                :cljs #(instance? cljs.core.UUID %)))
+(defs ::uuid-str
+  (pred #(and (string? %) (re-seq +uuid-re+ %))
+        #?(:clj #(java.util.UUID/fromString %)
+           :cljs #(uuid %))))
 
+(defs ::email #(and (string? %) (re-seq +email-re+ %)))
+
+(defs ::number-str
+  (pred #(or (number? %) (and (string? %) (util/numeric? %)))
+        #(if (number? %) % (util/parse-number %))))
+
+(defs ::integer-str
+  (pred #(or (number? %) (and (string? %) (util/numeric? %)))
+        #(if (number? %) (int %) (util/parse-int %))))
+
+(defs ::boolean-str
+  (pred #(and (string? %) (re-seq #"^(?:t|true|false|f|0|1)$" %))
+        #(contains? #{"t" "true" "1"} %)))
