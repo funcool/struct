@@ -1,5 +1,5 @@
 (ns struct.alpha
-  ;; (:refer-clojure :exclude [and])
+  (:refer-clojure :exclude [keys])
   (:require [struct.util :as util])
   #?(:cljs (:require-macros [struct.alpha :refer [defs]])))
 
@@ -125,31 +125,31 @@
 
 (defn- get-spec
   [spec]
-  (let [spec (cond
-               (satisfies? ISpec spec)
-               spec
+  (let [spec' (cond
+                (satisfies? ISpec spec)
+                spec
 
-               (fn? spec)
-               (->FnSpec spec nil nil)
+                (keyword? spec)
+                (get @registry spec)
 
-               (keyword? spec)
-               (get @registry spec)
+                (ifn? spec)
+                (->FnSpec spec nil nil)
 
-               :else
-               (throw (ex-info "unsupported type for spec lookup" {:spec spec})))]
-    (when (nil? spec)
+                :else
+                (throw (ex-info "unsupported type for spec lookup" {:spec spec})))]
+    (when (nil? spec')
       (throw (ex-info "spec not found" {:spec spec})))
-    spec))
+    spec'))
 
 (defn defs-impl
   [spec name]
   (cond
-    (fn? spec)
-    (->FnSpec spec name nil)
-
     (keyword? spec)
     (let [spec (get-spec spec)]
       (assoc spec :name name))
+
+    (ifn? spec)
+    (->FnSpec spec name nil)
 
     (satisfies? ISpec spec)
     (assoc spec :name name)
@@ -191,8 +191,23 @@
 (defn dict
   [& keypairs]
   (assert (even? (count keypairs)) "an even number of pairs is mandatory")
-  (let [pairs (map (fn [[k s]] [k (get-spec s)]) (partition 2 keypairs))]
+  (let [pairs (mapv (fn [[k s]] [k (get-spec s)]) (partition 2 keypairs))]
     (->MapSpec pairs nil)))
+
+(defn keys
+  [& {:keys [req-un opt-un]
+      :or {req-un [] opt-un []}
+      :as opts}]
+  (assert (or (not (empty? req-un))
+              (not (empty? opt-un))))
+  (assert (every? qualified-keyword? req-un))
+  (assert (every? qualified-keyword? opt-un))
+  (let [strip-ns #(-> % name keyword)
+        un-req-pair-fn #(vector (strip-ns %) (get-spec %))
+        un-opt-pair-fn #(vector (strip-ns %) (opt %))
+        pairs (concat (map un-req-pair-fn req-un)
+                      (map un-opt-pair-fn opt-un))]
+    (->MapSpec (vec pairs) nil)))
 
 #?(:clj
    (defmacro defs
