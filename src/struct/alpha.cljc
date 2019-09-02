@@ -31,7 +31,7 @@
               (let [result (-conform s acc)]
                 (if (= result ::invalid)
                   (reduced ::invalid)
-                  result)))
+                  (merge acc result))))
             value
             specs))
 
@@ -67,7 +67,7 @@
                   (if (= res ::invalid)
                     (reduced ::invalid)
                     (assoc acc k res))))
-              {}
+              data
               pairs)))
 
   (-explain [_ path via data]
