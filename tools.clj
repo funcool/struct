@@ -41,7 +41,7 @@
      :cache-analysis false)))
 
 (def build-options
-  {:main 'struct.tests
+  {:main 'struct.tests-main
    :output-to "out/tests.js"
    :output-dir "out/tests"
    :target :nodejs
@@ -49,11 +49,22 @@
    :optimizations :advanced
    :language-in  :ecmascript5
    :language-out :ecmascript5
+   :pseudo-names true
    :verbose true})
 
 (defmethod task "build:tests"
   [args]
   (api/build (api/inputs "src" "test") build-options))
+
+
+(defmethod task "build:benchmarks"
+  [args]
+  (api/build (api/inputs "src" "test")
+             (assoc build-options
+                    :main 'struct.benchmarks
+                    :output-to "out/bench.js"
+                    :output-dir "out/bench")))
+
 
 ;;; Build script entrypoint. This should be the last expression.
 

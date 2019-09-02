@@ -11,9 +11,11 @@
   :deploy
   {:extra-deps {badigeon/badigeon {:git/url "https://github.com/EwenG/badigeon.git"
                                    :sha "db25a8f7053dec65afeb7fb0d1a5351dcdbe78bd"
-                                   :tag "0.0.8"}}}
+                                   :tag "0.0.8"}}
+   :main-opts ["deploy.clj"]}
 
-  :ancient {:main-opts ["-m" "deps-ancient.deps-ancient"]
-            :extra-deps {deps-ancient {:mvn/version "RELEASE"}}}
+  :ancient
+   {:main-opts ["-m" "deps-ancient.deps-ancient"]
+    :extra-deps {deps-ancient {:mvn/version "RELEASE"}}}
 
   }}

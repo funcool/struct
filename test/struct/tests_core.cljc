@@ -1,4 +1,4 @@
-(ns struct.tests
+(ns struct.tests-core
   (:require
    ;; #?(:clj  [criterium.core :refer [quick-bench]])
    ;; #?(:cljs [cljs.spec.alpha :as s]
@@ -146,60 +146,6 @@
     (t/is (map? errors2))
     (t/is (empty? data2))
     (t/is (= (get-in errors2 [:a :code] ::st/every)))))
-
-;; (def email-rx
-;;   #"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$")
-
-;; (defn email?
-;;   [v]
-;;   (and string?
-;;        (re-matches email-rx v)))
-
-;; (s/def ::username string?)
-;; (s/def ::age number?)
-;; (s/def ::email email?)
-;; ;;
-;; (s/def ::bench-form
-;;   (s/keys :req-un [::username ::age ::email]))
-
-;; (st/defs bench-form
-;;   {:username [st/required st/string]
-;;    :age [st/required st/number]
-;;    :email [st/required st/email]})
-
-;; (defn bench-fn-using-spec
-;;   [data]
-;;   (let [result (s/valid? ::bench-form data)]
-;;     (assert result "should be valid")))
-
-;; (defn bench-fn-using-struct
-;;   [data]
-;;   (let [result (st/valid? data bench-form)]
-;;     (assert result "should be valid")))
-
-;; #?(:cljs
-;;    (defn bench1
-;;      []
-;;      (simple-benchmark [data {:username "foo" :age 10 :email "foo@bar.com"}]
-;;        (bench-fn-using-spec data)
-;;        100000))
-;;    :clj
-;;    (defn bench1
-;;      []
-;;      (let [data {:username "foo" :age 10 :email "foo@bar.com"}]
-;;        (quick-bench (bench-fn-using-spec data)))))
-
-;; #?(:cljs
-;;    (defn bench2
-;;      []
-;;      (simple-benchmark [data {:username "foo" :age 10 :email "foo@bar.com"}]
-;;        (bench-fn-using-struct data)
-;;        100000))
-;;    :clj
-;;    (defn bench2
-;;      []
-;;      (let [data {:username "foo" :age 10 :email "foo@bar.com"}]
-;;        (quick-bench (bench-fn-using-struct data)))))
 
 ;; --- Entry point
 
