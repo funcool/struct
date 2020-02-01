@@ -263,7 +263,7 @@ This is the table with available builtin validators:
 
 Additional notes:
 
-* `number-str` coerces to `java.lang.Double` or `float` (cljs)
+* `number-str` coerces to `java.lang.Double` or `Number` (cljs)
 * `boolean-str` coerces to `true` (`"t"`, `"true"`, `"1"`) or `false` (`"f"`, `"false"`, `"0"`).
 * `string-str` coerces anything to string using `str` function.
 
