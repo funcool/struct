@@ -1,4 +1,4 @@
-{:deps {funcool/cuerdas {:mvn/version "2.2.0"}}
+{:deps {funcool/cuerdas {:mvn/version "2021.05.29-0"}}
  :paths ["src"]
  :aliases
  {:dev
