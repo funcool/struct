@@ -4,6 +4,33 @@
 
 ;; --- Impl details
 
+(defn parse-number
+  "General purpose function for parse number like
+  string to number. It works with both integers
+  and floats."
+  [s]
+  (if (nil? s)
+    #?(:cljs js/NaN :clj Double/NaN)
+    (if (numeric? s)
+      (edn/read-string s)
+      #?(:cljs js/NaN :clj Double/NaN))))
+
+(defn parse-int
+  "Return the number value in integer form."
+  [s]
+  (cond
+    (number? s)
+    (int s)
+
+    (and (string? s)
+         (re-matches #"-?\d+(\.\d+)?" s))
+    #?(:clj (.longValue (java.math.BigDecimal. ^String s))
+       :cljs (js/parseInt s 10))
+
+    :else
+    #?(:clj Double/NaN
+       :cljs js/NaN)))
+
 (def ^:private map' #?(:cljs cljs.core/map
                        :clj clojure.core/map))
 
@@ -215,7 +242,7 @@
   {:message "must be a number"
    :optional true
    :validate #(or (number? %) (and (string? %) (str/numeric? %)))
-   :coerce #(if (number? %) % (str/parse-number %))})
+   :coerce #(if (number? %) % (parse-number %))})
 
 (def integer
   {:message "must be a integer"
@@ -227,7 +254,7 @@
   {:message "must be a long"
    :optional true
    :validate #(or (number? %) (and (string? %) (str/numeric? %)))
-   :coerce #(if (number? %) (int %) (str/parse-int %))})
+   :coerce #(if (number? %) (int %) (parse-int %))})
 
 (def boolean
   {:message "must be a boolean"
